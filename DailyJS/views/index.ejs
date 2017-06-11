@@ -1,0 +1,74 @@
+﻿<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <title>daily sojurn</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name='robots' content='noindex,nofollow' />
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,400italic&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css">
+  <% if (prod) { %>
+  <link rel="stylesheet" href="/app.min.css">
+  <% } else { %>
+  <link rel="stylesheet" href="/dev-style/style.css">
+  <% } %>
+</head>
+<body>
+  <div class="plank">
+
+    <div class="stickerTop">
+      <% if (img) { %>
+      <div class="stickerFront">
+        <div class="menu">
+          <a class="back ajax <%= img.prev_cls %>" href="<%= img.prev_url %>"><i class="fa fa-chevron-left"></i></a>
+          <a class="forward ajax <%= img.next_cls %>" href="<%= img.next_url %>"><i class="fa fa-chevron-right"></i></a>
+          <span class="enter"><i class="fa fa-lightbulb-o"></i></span>
+        </div>
+        <div class="loginPanel">
+          <input type="password" id="txtSecret" placeholder="tell me a secret" maxlength="32" />
+          <i class="fa fa-arrow-right btnLoginGo disabled"></i>
+          <span>forgot?</span>
+        </div>
+        <div class="photoMeta">
+          <span class="date"><%= img.dateStr %></span><br /><span class="city"><%= img.city %></span> &bull; <span class="poster"><%= img.user %></span>
+        </div>
+        <div class="photoTitle"><%= img.title %></div>
+      </div>
+      <% } %>
+    </div>
+
+    <div class="content">
+      <div class="content-inner">
+
+        <% if (img) { %>
+        <div class="image-holder" style="background-image:url('<%= img.img_url %>');">&nbsp;</div>
+        <% } %>
+
+        <% if (pageNotFound) { %>
+        <div class="content-badpage">
+          404 ;-[<br />
+          <a href="/">let's go home</a>
+        </div>
+        <% } %>
+
+      </div>
+    </div>
+    <div class="centrerBottom">
+      <div class="stickerBottom">
+        <a href="/">daily sojourn</a>
+      </div>
+    </div>
+  </div>
+
+  <% if (prod) { %>
+  <script src="/app.min.js"></script>
+  <% } else { %>
+  <script src="/lib/history.min.js"></script>
+  <script src="/lib/jquery-3.1.1.min.js"></script>
+  <script src="/dev-js/zsnippets.js"></script>
+  <script src="/dev-js/page.js"></script>
+  <script src="/dev-js/front.js"></script>
+  <% } %>
+</body>
+</html>

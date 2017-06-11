@@ -1,0 +1,27 @@
+﻿DROP TABLE IF EXISTS images;
+CREATE TABLE images(
+    id                INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    dateint           INT NOT NULL,
+    user_id           INT NOT NULL,
+    city              VARCHAR(128) NOT NULL,
+    title             VARCHAR(256) NOT NULL,
+    imgfile           VARCHAR(64) NOT NULL,
+    largew            INT NOT NULL,
+    largeh            INT NOT NULL,
+    smallw            INT NOT NULL,
+    smallh            INT NOT NULL,
+    mediumw           INT NOT NULL,
+    mediumh           INT NOT NULL
+) ENGINE=InnoDB CHARACTER SET=utf8 COLLATE utf8_general_ci;
+CREATE INDEX idx_images_dateint ON images(dateint);
+
+DROP TABLE IF EXISTS users;
+CREATE TABLE users(
+    id                INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    usrname           VARCHAR(128) NOT NULL,
+    defcity           VARCHAR(128) NOT NULL,
+    secret_hash       VARCHAR(256) NOT NULL,
+    secret_salt       VARCHAR(256) NOT NULL,
+    email             VARCHAR(768) NOT NULL
+) ENGINE=InnoDB CHARACTER SET=utf8 COLLATE utf8_general_ci;
+
