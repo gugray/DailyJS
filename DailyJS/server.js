@@ -6,7 +6,7 @@ var app = express();
 app.set('view engine', 'ejs');
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static('public'));
+app.use(express.static('public', { maxage: "365d" }));
 var routes = require("./routes.js")(app);
 
 var port = process.env.port || 3017;

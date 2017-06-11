@@ -1,12 +1,17 @@
 ﻿var request = require('request');
 var db = require("./db.js");
+var pjson = require('./package.json');
 
 var routes = function (app) {
 
   app.get('(/|/past/:date/:city)', function (req, resp) {
     // Load picture info, populate page
     var ps = null;
-    if (req.url == "/") ps = db.getLatestImage();
+    var noCache = false;
+    if (req.url == "/") {
+      ps = db.getLatestImage();
+      noCache = true;
+    }
     else {
       var spec = decodeURIComponent(req.url.replace("/past/", ""));
       var parts = spec.split('/');
@@ -16,6 +21,7 @@ var routes = function (app) {
       (res) => {
         var model = {
           prod: process.env.node_env == "production",
+          ver: pjson.version,
           pageNotFound: false,
           img: {
             prev_url: res.prev_dateint ? "/past/" + res.prev_dateint + "/" + encodeURIComponent(res.prev_city) : "#",
@@ -26,17 +32,19 @@ var routes = function (app) {
             title: res.title,
             city: res.city,
             user: res.user,
-            dateStr: res.dateStr
+            dateStr: res.dateStr,
           }
         };
         if (model.img.prev_url == "#") model.img.prev_cls = "disabled";
         if (model.img.next_url == "#") model.img.next_cls = "disabled";
+        if (noCache) resp.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
         resp.render('index', model);
       },
       (err) => {
         resp.status(404);
         resp.render('index', {
           prod: process.env.node_env == "production",
+          ver: pjson.version,
           img: null,
           pageNotFound: true
         });
@@ -46,6 +54,7 @@ var routes = function (app) {
   app.get("/api/getlatestimage", function (req, resp) {
     db.getLatestImage().then(
       (res) => {
+        resp.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
         resp.send(res);
       },
       (err) => {

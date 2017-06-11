@@ -1,5 +1,8 @@
+.vs/
 DailyJS/package-lock.json
 DailyJS/node_modules/
+DailyJS/bin/
+DailyJS/obj/
 DailyJS/typings/
 DailyJS/public/dev-style/*.css
 DailyJS/public/app.min.*
