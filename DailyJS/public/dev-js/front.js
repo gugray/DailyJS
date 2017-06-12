@@ -1,5 +1,6 @@
 ﻿/// <reference path="../lib/jquery-3.1.1.min.js" />
 /// <reference path="zsnippets.js" />
+/// <reference path="auth.js" />
 /// <reference path="page.js" />
 
 var App = App || {};
@@ -10,41 +11,74 @@ App.front = (function (path) {
   var path = path;
   enter();
 
+  // Called when front first shown, or navigated to from back
   function enter() {
     if (!initView()) return;
     fetchFrontData();
   }
 
+  // Called when navigating around within front
+  function move(newPath) {
+    path = newPath;
+    fetchFrontData();
+  }
+
   function initView() {
     var contentAlreadyThere = true;
+    // Build page DOM if missing
     if ($(".stickerFront").length == 0) {
       $(".stickerTop").html(zsnippets["front"]);
       $(".content-inner").html("<div class='image-holder'>&nbsp;</div>");
       contentAlreadyThere = false;
     }
-    $(".menu .enter").click(function () {
-      if ($(".loginPanel").hasClass("visible")) {
-        $(".photoMeta").removeClass("hidden");
-        $(".loginPanel").removeClass("visible");
-      }
-      else {
-        $(".photoMeta").addClass("hidden");
-        $(".loginPanel").addClass("visible");
-        $("#txtSecret").val("");
-        $("#txtSecret").focus();
-      }
+    // Enter icon click
+    $(".menu .enter").click(onEnterClicked);
+    // Login panel behavior
+    wireupLoginPanel();
+    // Let caller now if we still need to fetch data
+    return !contentAlreadyThere;
+  }
+
+  function wireupLoginPanel() {
+    $("#txtSecret").on("input", function () {
+      if ($("#txtSecret").val() != "") $(".btnLoginGo").removeClass("disabled");
+      else $(".btnLoginGo").addClass("disabled");
     });
-    return contentAlreadyThere;
+    $(".btnLoginGo").click(onLoginGo);
+  }
+
+  function onLoginGo() {
+    if ($(".btnLoginGo").hasClass("disabled")) return;
+    App.auth.login($("#txtSecret").val(), function (res) {
+      if (!res) {
+        // Failed login feedback
+      }
+      else App.page.inPageNavigate("/inside/history");
+    });
+  }
+
+  function onEnterClicked() {
+    // Login panel currently shown: hide it
+    if ($(".loginPanel").hasClass("visible")) {
+      $(".photoMeta").removeClass("hidden");
+      $(".loginPanel").removeClass("visible");
+      return;
+    }
+    // Currently not logged in: show login panel
+    if (!App.auth.isLoggedIn()) {
+      $(".photoMeta").addClass("hidden");
+      $(".loginPanel").addClass("visible");
+      $("#txtSecret").val("");
+      $("#txtSecret").focus();
+    }
+    // Currently logged in: go inside
+    else App.page.inPageNavigate("/inside/history");
   }
 
   function fetchFrontData() {
     // Naked path: latest image
     if (path == "/") {
-      var req = $.ajax({
-        url: "/api/getlatestimage",
-        type: "GET",
-        contentType: "application/x-www-form-urlencoded; charset=UTF-8"
-      });
+      var req = App.auth.ajax("/api/getlatestimage", "GET");
       req.done(function (data) {
         $(".image-holder").css("background-image", "url('" + data.img_url + "')");
         $(".photoTitle").text(data.title);
@@ -63,12 +97,7 @@ App.front = (function (path) {
     else if (path.startsWith("/past/")) {
       var spec = path.replace("/past/", "");
       var parts = spec.split('/');
-      var req = $.ajax({
-        url: "/api/getimage",
-        type: "GET",
-        contentType: "application/x-www-form-urlencoded; charset=UTF-8",
-        data: { date: parts[0], city: decodeURIComponent(parts[1]) }
-      });
+      var req = App.auth.ajax("/api/getimage", "GET", { date: parts[0], city: decodeURIComponent(parts[1]) });
       req.done(function (data) {
         $(".image-holder").css("background-image", "url('" + data.img_url + "')");
         $(".photoTitle").text(data.title);
@@ -94,11 +123,6 @@ App.front = (function (path) {
         App.page.show404();
       });
    }
-  }
-
-  function move(newPath) {
-    path = newPath;
-    fetchFrontData();
   }
 
   return {

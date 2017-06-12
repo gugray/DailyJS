@@ -1,0 +1,92 @@
+﻿var crypto = require("crypto");
+var db = require("./db.js");
+
+var auth = (function () {
+
+  // TO-DO:
+  // - Periodic cleanup of expired sessions
+
+  // Lease on tokens; if not seen for this long, login expires.
+  var leaseSec = 60;
+
+  // Maps from auth token to session object
+  var sessions = {};
+
+  function Session(userName, userId) {
+    var self = this;
+    self.userName = userName;
+    self.userId = userId;
+    self.expUtc = new Date(new Date().getTime() + 1000 * leaseSec);
+    self.extend = function () {
+      self.expUtc = new Date(self.expUtc.getTime() + 1000 * leaseSec);
+    }
+  }
+
+  function getSession(token) {
+    if (!token in sessions) return null;
+    var s = sessions[token];
+    var now = new Date();
+    if (s.expUtc < now) {
+      delete sessions[token];
+      return null;
+    }
+    else s.extend();
+    return s;
+  }
+
+  // Verifies authenticated session before serving requests
+  // Updates session status; infuses info for later handlers
+  function sessionWare(req, res, next) {
+    if (req.headers.authorization) {
+      var token = req.headers.authorization.replace("Bearer ", "");
+      var s = getSession(token);
+      if (s == null) res.header("LoggedIn", false);
+      else {
+        res.header("LoggedIn", true);
+        req.dailyUserName = s.userName;
+        req.dailyUserId = s.userId;
+      }
+    }
+    next();
+  }
+
+  function loginUserBySecret(users, secret, prevToken) {
+    var user = null;
+    for (var i = 0; i != users.length; ++i) {
+      // TO-DO: actual secret verification
+      var thisUser = users[i];
+      if (thisUser.usrname == secret) {
+        user = thisUser;
+        break;
+      }
+    }
+    // TO-DO: remove previous token?
+    if (user == null) return null;
+    // Get genuinely random token that doesn't identify any session yet
+    var token = crypto.randomBytes(64).toString('hex');
+    while (token in sessions) token = crypto.randomBytes(64).toString('hex');
+    sessions[token] = new Session(user.usrname, user.id);
+    return token;
+  }
+
+  function login(secret, prevToken) {
+    return new Promise((resolve, reject) => {
+      var ctxt = {};
+      db.getAllUsers(ctxt)
+        .then((ctxt) => {
+          resolve(loginUserBySecret(ctxt.users, secret, prevToken));
+        },
+        (err) => {
+          return reject(err);
+        });
+    });
+  }
+
+  return {
+    sessionWare: sessionWare,
+    login: login
+  };
+
+})();
+
+module.exports = auth;

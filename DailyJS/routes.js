@@ -1,10 +1,11 @@
-﻿var request = require('request');
+﻿//var request = require('request');
 var db = require("./db.js");
+var auth = require("./auth.js");
 var pjson = require('./package.json');
 
 var routes = function (app) {
 
-  app.get('(/|/past/:date/:city)', function (req, resp) {
+  app.get('(/|/past/:date/:city)', function (req, res) {
     // Load picture info, populate page
     var ps = null;
     var noCache = false;
@@ -18,31 +19,31 @@ var routes = function (app) {
       ps = db.getImage(parts[0], parts[1]);
     }
     ps.then(
-      (res) => {
+      (result) => {
         var model = {
           prod: process.env.node_env == "production",
           ver: pjson.version,
           pageNotFound: false,
           img: {
-            prev_url: res.prev_dateint ? "/past/" + res.prev_dateint + "/" + encodeURIComponent(res.prev_city) : "#",
+            prev_url: result.prev_dateint ? "/past/" + result.prev_dateint + "/" + encodeURIComponent(result.prev_city) : "#",
             prev_cls: "",
-            next_url: res.next_dateint ? "/past/" + res.next_dateint + "/" + encodeURIComponent(res.next_city) : "#",
+            next_url: result.next_dateint ? "/past/" + result.next_dateint + "/" + encodeURIComponent(result.next_city) : "#",
             next_cls: "",
-            img_url: res.img_url,
-            title: res.title,
-            city: res.city,
-            user: res.user,
-            dateStr: res.dateStr,
+            img_url: result.img_url,
+            title: result.title,
+            city: result.city,
+            user: result.user,
+            dateStr: result.dateStr,
           }
         };
         if (model.img.prev_url == "#") model.img.prev_cls = "disabled";
         if (model.img.next_url == "#") model.img.next_cls = "disabled";
-        if (noCache) resp.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-        resp.render('index', model);
+        if (noCache) res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+        res.render('index', model);
       },
       (err) => {
-        resp.status(404);
-        resp.render('index', {
+        res.status(404);
+        res.render('index', {
           prod: process.env.node_env == "production",
           ver: pjson.version,
           img: null,
@@ -51,30 +52,44 @@ var routes = function (app) {
       });
   });
 
-  app.get("/api/getlatestimage", function (req, resp) {
+  app.get("/api/getlatestimage", function (req, res) {
     db.getLatestImage().then(
-      (res) => {
-        resp.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-        resp.send(res);
+      (result) => {
+        res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+        res.send(result);
       },
       (err) => {
-        resp.status(404).send("no such image");
+        res.status(404).send("no such image");
       });
   });
 
-  app.get("/api/getimage", function (req, resp) {
+  app.get("/api/getimage", function (req, res) {
     db.getImage(req.query["date"], req.query["city"]).then(
-      (res) => {
-        resp.send(res);
+      (result) => {
+        res.send(result);
       },
       (err) => {
-        resp.status(404).send("no such image");
+        res.status(404).send("no such image");
       });
   });
 
-  app.get('*', function (req, resp) {
-    resp.status(404);
-    resp.render('index', {
+  app.post("/api/login", function (req, res) {
+    if (req.body.secret) {
+      auth.login(req.body.secret, req.body.prevToken).then(
+        (result) => {
+          if (result) res.send({ token: result });
+          else res.status(401).send("wrong secret");
+        },
+        (err) => {
+          res.status(500).send("internal server error");
+        });
+    }
+    else res.status(400).send("invalid request");
+  });
+
+  app.get('*', function (req, res) {
+    res.status(404);
+    res.render('index', {
       prod: process.env.node_env == "production",
       img: null,
       pageNotFound: true

@@ -1,8 +1,10 @@
 ﻿var express = require("express");
 var bodyParser = require("body-parser");
 var db = require("./db.js");
-var app = express();
+var auth = require("./auth.js");
 
+var app = express();
+app.use(auth.sessionWare);
 app.set('view engine', 'ejs');
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));

@@ -31,6 +31,15 @@ var db = (function () {
     this.next_city = next_city;
   }
 
+  function User(id, usrname, defcity, secret_hash, secret_salt, email) {
+    this.id = id;
+    this.usrname = usrname;
+    this.defcity = defcity;
+    this.secret_hash = secret_hash;
+    this.secret_salt = secret_salt;
+    this.email = email;
+  }
+
   var _selLatest = "\
     SELECT imgfile, title, dateint, city, usrname\
     FROM images, users\
@@ -177,9 +186,41 @@ var db = (function () {
     });
   }
 
+  var _selAllUsers = "SELECT * FROM users;";
+
+  function selAllUsers(ctxt) {
+    return new Promise((resolve, reject) => {
+      ctxt.conn.query(_selAllUsers, (err, rows) => {
+        if (err) return reject(err);
+        for (var i = 0; i != rows.length; ++i) {
+          var row = rows[i];
+          ctxt.users.push(new User(row.id, row.usrname, row.defcity, row.secret_hash, row.secret_salt, row.email));
+        }
+        resolve(ctxt);
+      });
+    });
+  }
+
+  function getAllUsers(ctxt) {
+    return new Promise((resolve, reject) => {
+      ctxt.users = [];
+      getConn(ctxt)
+        .then(selAllUsers)
+        .then((ctxt) => {
+          if (ctxt.conn) { ctxt.conn.release(); ctxt.conn = null; }
+          resolve(ctxt);
+        })
+        .catch((err) => {
+          if (ctxt.conn) ctxt.conn.release();
+          return reject(ctxt);
+        });
+    });
+  }
+
   return {
     getLatestImage: getLatestImage,
-    getImage: getImage
+    getImage: getImage,
+    getAllUsers: getAllUsers
   };
 })();
 

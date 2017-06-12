@@ -38,8 +38,10 @@ gulp.task('scripts', ['snippets'], function () {
   return gulp.src([
     './public/lib/*.js',
     './public/dev-js/zsnippets.js',
+    './public/dev-js/auth.js',
     './public/dev-js/page.js',
-    './public/dev-js/front.js'
+    './public/dev-js/front.js',
+    './public/dev-js/history.js'
   ])
     .pipe(uglify().on('error', function (e) { console.log(e); }))
     .pipe(concat('app.min.js'))

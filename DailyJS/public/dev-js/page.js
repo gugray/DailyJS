@@ -42,6 +42,11 @@ App.page = (function () {
     return false;
   }
 
+  function inPageNavigate(path) {
+    history.pushState(null, null, path);
+    parseLocation();
+  }
+
   function initDynNav() {
     // Remove old handlers
     $(document).off('click', 'a.ajax', onDynNav);
@@ -67,7 +72,8 @@ App.page = (function () {
       pages.push(ctrl);
     },
     esc: esc,
-    show404: show404
+    show404: show404,
+    inPageNavigate: inPageNavigate
   };
 
 })();
