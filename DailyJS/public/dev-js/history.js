@@ -13,27 +13,45 @@ App.history = (function (path) {
 
   // Called when front first shown, or navigated to from back
   function enter() {
-    initView();
-    fetchData();
+    fetchData(true);
   }
 
   // Called when navigating around within front
   function move(newPath) {
     path = newPath;
-    fetchData();
+    fetchData(false);
   }
 
-  function initView() {
-    // Build page DOM
-    $(".stickerTop").html(zsnippets["stickerInside"]);
-    $(".content-inner").html("inside!");
+  function fetchData(fullRender) {
+    var req = App.auth.ajax("/api/history", "GET");
+    req.done(function (data) {
+      if (fullRender) renderSticker();
+      renderInner();
+    });
+    req.fail(function (jqXHR, textStatus, error) {
+      if (jqXHR.status == 401) App.auth.renderLogin();
+      else {
+        if (fullRender) renderSticker();
+        renderOops();
+      }
+    });
   }
 
-  function fetchData() {
+  function renderInner() {
+    $(".content-inner").html("[in]");
+  }
+
+  function renderSticker() {
+    $(".stickerTop").html(zsnippets["sticker-all-inside"]);
+  }
+
+  function renderOops() {
+    $(".content-inner").html(zsnippets["in-oops"]);
   }
 
   return {
     move: move,
+    enter: enter,
     name: "history"
   };
 });

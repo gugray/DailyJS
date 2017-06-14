@@ -73,7 +73,8 @@ App.page = (function () {
     },
     esc: esc,
     show404: show404,
-    inPageNavigate: inPageNavigate
+    inPageNavigate: inPageNavigate,
+    reEnterCurrent: function() { ctrl.enter(); }
   };
 
 })();

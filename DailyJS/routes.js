@@ -52,6 +52,15 @@ var routes = function (app) {
       });
   });
 
+  app.get('(/inside/history|/inside/history/c/:city|/inside/history/s/:user)', function (req, res) {
+    res.render('index', {
+      prod: process.env.node_env == "production",
+      ver: pjson.version,
+      img: null,
+      pageNotFound: false
+    });
+  });
+
   app.get("/api/getlatestimage", function (req, res) {
     db.getLatestImage().then(
       (result) => {
@@ -85,6 +94,13 @@ var routes = function (app) {
         });
     }
     else res.status(400).send("invalid request");
+  });
+
+  app.get("/api/history", function (req, res) {
+    if (req.dailyUserName) {
+      res.send("hello");
+    }
+    else res.status(401).send("authentication needed");
   });
 
   app.get('*', function (req, res) {

@@ -9,6 +9,7 @@ App.front = (function (path) {
   "use strict";
 
   var path = path;
+  var pathOnLogin = "/inside/history";
   enter();
 
   // Called when front first shown, or navigated to from back
@@ -33,28 +34,13 @@ App.front = (function (path) {
     }
     // Enter icon click
     $(".menu .enter").click(onEnterClicked);
-    // Login panel behavior
-    wireupLoginPanel();
+    // Login panel with behavior
+    var elmLoginPanel = $(zsnippets["loginpanel-inner"]);
+    elmLoginPanel.insertBefore(".photoMeta");
+    //$(".photoMeta").insertBefore(elmLoginPanel);
+    App.auth.controlLogin(pathOnLogin);
     // Let caller now if we still need to fetch data
     return !contentAlreadyThere;
-  }
-
-  function wireupLoginPanel() {
-    $("#txtSecret").on("input", function () {
-      if ($("#txtSecret").val() != "") $(".btnLoginGo").removeClass("disabled");
-      else $(".btnLoginGo").addClass("disabled");
-    });
-    $(".btnLoginGo").click(onLoginGo);
-  }
-
-  function onLoginGo() {
-    if ($(".btnLoginGo").hasClass("disabled")) return;
-    App.auth.login($("#txtSecret").val(), function (res) {
-      if (!res) {
-        // Failed login feedback
-      }
-      else App.page.inPageNavigate("/inside/history");
-    });
   }
 
   function onEnterClicked() {
@@ -72,7 +58,7 @@ App.front = (function (path) {
       $("#txtSecret").focus();
     }
     // Currently logged in: go inside
-    else App.page.inPageNavigate("/inside/history");
+    else App.page.inPageNavigate(pathOnLogin);
   }
 
   function fetchFrontData() {
@@ -127,6 +113,7 @@ App.front = (function (path) {
 
   return {
     move: move,
+    enter: enter,
     name: "front"
   };
 });

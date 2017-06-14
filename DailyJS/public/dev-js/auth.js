@@ -62,6 +62,110 @@ App.auth = (function (path) {
     return res;
   }
 
+  function renderLogin() {
+    $(".stickerTop").html("");
+    var html = zsnippets["in-login"];
+    html = html.replace("{{loginpanel-inner}}", zsnippets["loginpanel-inner"]);
+    $(".content-inner").html(html);
+    $("#txtSecret").val("");
+    $("#txtSecret").focus();
+    controlLogin();
+  }
+
+  function isValidEmail(str) {
+    // - email regex
+    // http://emailregex.com/
+    var reMail = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return reMail.test(str);
+  }
+
+  function controlLogin(pathOnSuccess) {
+    $("#txtSecret").on("input", function () {
+      if ($("#txtSecret").val() != "") $(".btnLoginGo").removeClass("disabled");
+      else $(".btnLoginGo").addClass("disabled");
+    });
+    $("#txtResetEmail").on("input", function () {
+      if (isValidEmail($("#txtResetEmail").val())) $(".btnLoginGo").removeClass("disabled");
+      else $(".btnLoginGo").addClass("disabled");
+    });
+    $("#txtSecret").keyup(function (event) {
+      if (event.keyCode == 13) {
+        onLoginGo(pathOnSuccess);
+        return false;
+      }
+      else return true;
+    });
+    $("#txtResetEmail").keyup(function (event) {
+      if (event.keyCode == 13) {
+        onLoginGo(pathOnSuccess);
+        return false;
+      }
+      else return true;
+    });
+    $(".btnLoginGo").click(function () { onLoginGo(pathOnSuccess); });
+    $(".forgotSecret").click(onForgotSecret);
+    $(".resetEmailFeedback .close span").click(function () {
+      $(".resetEmailFeedback").removeClass("visible");
+    });
+  }
+
+  function onForgotSecret() {
+    // "forgot?" clicked
+    if ($("#txtResetEmail").hasClass("hidden")) {
+      $(".forgotSecret").text("cancel");
+      $("#txtResetEmail").removeClass("hidden");
+      $("#txtSecret").addClass("hidden");
+      $("#txtResetEmail").val("");
+      $("#txtResetEmail").focus();
+    }
+    // "cancel" clicked
+    else {
+      $(".forgotSecret").text("forgot?");
+      $("#txtResetEmail").addClass("hidden");
+      $("#txtSecret").removeClass("hidden");
+      $("#txtSecret").val("");
+      $("#txtSecret").focus();
+    }
+    // DBG opposite!
+    //$(".btnLoginGo").removeClass("disabled")
+    $(".btnLoginGo").addClass("disabled")
+  }
+
+  function onLoginGo(pathOnSuccess) {
+    // Disabled does nothing
+    if ($(".btnLoginGo").hasClass("disabled")) return;
+    // We're in "enter secret" mode
+    if (!$("#txtSecret").hasClass("hidden")) {
+      $(".btnLoginGo").addClass("disabled");
+      App.auth.login($("#txtSecret").val(), function (res) {
+        $(".btnLoginGo").removeClass("disabled");
+        if (!res) {
+          // Failed login feedback
+          $(".loginPanel").addClass("failed");
+          setTimeout(function () {
+            $(".loginPanel").removeClass("failed");
+          }, 100);
+        }
+        else {
+          // Re-init current page (inside) or move (from front)
+          if (!pathOnSuccess) App.page.reEnterCurrent();
+          else App.page.inPageNavigate(pathOnSuccess);
+        }
+      });
+    }
+    // We're in "send reset email" mode
+    else {
+      $(".resetEmailFeedback").addClass("visible");
+      $(".resetEmailFeedback .success").addClass("visible");
+      var offs = {
+        left: $(".loginPanel").offset().left,
+        top: $(".loginPanel").offset().top + $(".loginPanel").height() + 10
+      }
+      $(".resetEmailFeedback").offset(offs);
+    }
+  }
+
+
   return {
     // Submits an AJAX request. Boilerplate infuses auth token (if we're logged in),
     // and updates logged-in status from response.
@@ -71,7 +175,11 @@ App.auth = (function (path) {
     isLoggedIn: isLoggedIn,
 
     // Attempts to log in
-    login: function (secret, callback) { doLogin(secret, callback); }
+    login: function (secret, callback) { doLogin(secret, callback); },
+
+    renderLogin: renderLogin,
+
+    controlLogin: controlLogin
 
   };
 

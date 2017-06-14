@@ -14,17 +14,17 @@ var auth = (function () {
 
   function Session(userName, userId) {
     var self = this;
-    self.userName = userName;
-    self.userId = userId;
-    self.expUtc = new Date(new Date().getTime() + 1000 * leaseSec);
+    this.userName = userName;
+    this.userId = userId;
+    this.expUtc = new Date(new Date().getTime() + 1000 * leaseSec);
     self.extend = function () {
       self.expUtc = new Date(self.expUtc.getTime() + 1000 * leaseSec);
     }
   }
 
   function getSession(token) {
-    if (!token in sessions) return null;
     var s = sessions[token];
+    if (!s) return null;
     var now = new Date();
     if (s.expUtc < now) {
       delete sessions[token];
