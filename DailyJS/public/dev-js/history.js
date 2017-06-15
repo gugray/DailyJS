@@ -39,7 +39,7 @@ App.history = (function (path) {
 
   function renderInner() {
     $(".content-inner").html(zsnippets["in-history"]);
-    $('.inner-history').perfectScrollbar();  
+    $('.inner-history .thumbs').perfectScrollbar();  
   }
 
   function renderSticker() {
