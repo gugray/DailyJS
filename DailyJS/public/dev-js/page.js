@@ -37,12 +37,14 @@ App.page = (function () {
   }
 
   function onDynNav() {
+    $(".popup").removeClass("visible");
     history.pushState(null, null, this.href);
     parseLocation();
     return false;
   }
 
   function inPageNavigate(path) {
+    $(".popup").removeClass("visible");
     history.pushState(null, null, path);
     parseLocation();
   }

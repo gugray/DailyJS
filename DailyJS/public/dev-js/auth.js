@@ -109,23 +109,28 @@ App.auth = (function (path) {
     });
   }
 
-  function onForgotSecret() {
-    // "forgot?" clicked
-    if ($("#txtResetEmail").hasClass("hidden")) {
-      $(".forgotSecret").text("cancel");
-      $("#txtResetEmail").removeClass("hidden");
-      $("#txtSecret").addClass("hidden");
-      $("#txtResetEmail").val("");
-      $("#txtResetEmail").focus();
-    }
-    // "cancel" clicked
-    else {
+  function setForgotOrCancel(forgot) {
+    if (forgot) {
       $(".forgotSecret").text("forgot?");
       $("#txtResetEmail").addClass("hidden");
       $("#txtSecret").removeClass("hidden");
       $("#txtSecret").val("");
       $("#txtSecret").focus();
     }
+    else {
+      $(".forgotSecret").text("cancel");
+      $("#txtResetEmail").removeClass("hidden");
+      $("#txtSecret").addClass("hidden");
+      $("#txtResetEmail").val("");
+      $("#txtResetEmail").focus();
+    }
+  }
+
+  function onForgotSecret() {
+    // "forgot?" clicked
+    if ($("#txtResetEmail").hasClass("hidden")) setForgotOrCancel(false);
+    // "cancel" clicked
+    else setForgotOrCancel(true);
     // DBG opposite!
     //$(".btnLoginGo").removeClass("disabled")
     $(".btnLoginGo").addClass("disabled")
@@ -134,6 +139,8 @@ App.auth = (function (path) {
   function onLoginGo(pathOnSuccess) {
     // Disabled does nothing
     if ($(".btnLoginGo").hasClass("disabled")) return;
+    // Hide previous popup if we still have it
+    $(".popup").removeClass("visible");
     // We're in "enter secret" mode
     if (!$("#txtSecret").hasClass("hidden")) {
       $(".btnLoginGo").addClass("disabled");
@@ -155,14 +162,37 @@ App.auth = (function (path) {
     }
     // We're in "send reset email" mode
     else {
-      $(".resetEmailFeedback").addClass("visible");
-      $(".resetEmailFeedback .success").addClass("visible");
-      var offs = {
-        left: $(".loginPanel").offset().left,
-        top: $(".loginPanel").offset().top + $(".loginPanel").height() + 10
-      }
-      $(".resetEmailFeedback").offset(offs);
+      var req = doAjax("/api/resetsecret", "POST", { email: $("#txtResetEmail").val() });
+      req.done(function () {
+        showEmailFeedback(true);
+        setForgotOrCancel(true);
+      });
+      req.fail(function () {
+        showEmailFeedback(false);
+        $("#txtResetEmail").focus();
+      });
+      $(".btnLoginGo").addClass("hidden");
+      $(".icoEmailSending").removeClass("hidden");
     }
+  }
+
+  function showEmailFeedback(success) {
+    $(".resetEmailFeedback").addClass("visible");
+    if (success) {
+      $(".resetEmailFeedback .success").addClass("visible");
+      $(".resetEmailFeedback .fail").removeClass("visible");
+    }
+    else {
+      $(".resetEmailFeedback .success").removeClass("visible");
+      $(".resetEmailFeedback .fail").addClass("visible");
+    }
+    var offs = {
+      left: $(".loginPanel").offset().left,
+      top: $(".loginPanel").offset().top + $(".loginPanel").height() + 10
+    }
+    $(".resetEmailFeedback").offset(offs);
+    $(".btnLoginGo").removeClass("hidden");
+    $(".icoEmailSending").addClass("hidden");
   }
 
 

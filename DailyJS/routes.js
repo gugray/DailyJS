@@ -96,6 +96,13 @@ var routes = function (app) {
     else res.status(400).send("invalid request");
   });
 
+  app.post("/api/resetsecret", function (req, res) {
+    setTimeout(() => {
+      if (req.body.email.startsWith("a")) res.status(200).send();
+      else res.status(500).send();
+    }, 3000);
+  });
+
   app.get("/api/history", function (req, res) {
     if (req.dailyUserName) {
       res.send("hello");

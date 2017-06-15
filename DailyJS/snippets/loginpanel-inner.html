@@ -2,14 +2,15 @@
   <input type="password" id="txtSecret" placeholder="tell me a secret" maxlength="32" />
   <input type="text" id="txtResetEmail" class="hidden" placeholder="enter your email" maxlength="64" />
   <i class="fa fa-arrow-right btnLoginGo disabled"></i>
+  <i class="fa fa-spinner fa-pulse fa-3x fa-fw icoEmailSending hidden"></i>
   <span class="forgotSecret">forgot?</span>
 </div>
-<div class="resetEmailFeedback">
+<div class="resetEmailFeedback popup">
   <div class="success">
     check your inbox: if <i>daily</i> knows your email, a message with a reset link has been sent to you.
   </div>
   <div class="fail">
-    ouch! <i>daily</i> tried to send you a message with a reset link, but something went wrong.
+    <b>ouch!</b> <i>daily</i> tried to send you a message with a reset link, but something went wrong.
   </div>
   <div class="close"><span>close</span></div>
 </div>
