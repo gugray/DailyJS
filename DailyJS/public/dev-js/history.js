@@ -38,11 +38,15 @@ App.history = (function (path) {
   }
 
   function renderInner() {
-    $(".content-inner").html("[in]");
+    $(".content-inner").html(zsnippets["in-history"]);
   }
 
   function renderSticker() {
     $(".stickerTop").html(zsnippets["sticker-all-inside"]);
+    $(".menuHistory").addClass("selected");
+    $(".sticker-inside .enter").click(function () {
+      App.page.inPageNavigate("/");
+    });
   }
 
   function renderOops() {

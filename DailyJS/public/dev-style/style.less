@@ -9,7 +9,7 @@
 @clrRegionBg: #202020;
 @clrLighterBg: #303030;
 @clrAlert: #f57f25;
-@clrBlue: #55acee;
+@clrBlue: #89cbfc;
 
 * { margin: 0; padding: 0; border: 0; }
 div, p, h1, h2, h3, ul, ol, blockquote {
@@ -37,7 +37,7 @@ body {
     padding-top: 0.1rem; z-index: 1; cursor: default;
     text-align: right; padding-right: 1rem;
     a, span {
-      color:@clrTextFaint; text-decoration: none; width: 3rem; display: inline-block; text-align: center; 
+      color: @clrTextFaint; text-decoration: none; width: 3rem; display: inline-block; text-align: center; 
       cursor: default;
       &:hover { color: @clrTextHover; }
       &.disabled { visibility: hidden; }
@@ -117,4 +117,49 @@ body {
   width: 20.5rem; float: none; margin: 0 auto;
   p { text-align: center; margin-bottom: 0.5rem; }
   .loginPanel { width: 20.5rem; position: relative; float: left; }
+}
+
+.sticker-inside {
+  z-index: 2; height: 3rem; overflow: hidden;
+  a {
+    display: block; width: auto; position: relative; float: left; text-decoration: none; color: @clrText;
+    cursor: pointer; text-transform: uppercase; font-size: 1.2rem; margin-top: 0.6rem;
+    margin-left: 3rem; &:first-child { margin-left: 2rem; }
+    &:hover, &.selected { color: @clrBlue; }
+  }
+  .enter {
+    color: @clrTextFaint; text-decoration: none; width: 3rem; display: block; text-align: center; float: right;
+    cursor: default; font-size: 2rem; margin-right: 1rem; margin-top: 0.1rem;
+    &:hover { color: @clrTextHover; }
+    &.disabled { visibility: hidden; }
+  }
+  .welcome { 
+    width: auto; float: right; margin-right: 1rem; padding-top: 0.8rem; color: @clrTextFaint;
+    span { color: @clrText; }
+  }
+  .menuSignout {
+    display: block; width: auto; position: relative; float: right; color: @clrTextFaint;
+    font-size: 1.2rem; margin-right: 1rem; margin-top: 0.9rem;
+    &:hover { color: @clrTextHover; }
+  }
+}
+
+.inner-history {
+  border: 1px solid #800000;
+  height: 100%;
+::-webkit-scrollbar
+{
+  width: 12px;  /* for vertical scrollbars */
+  height: 12px; /* for horizontal scrollbars */
+}
+
+::-webkit-scrollbar-track
+{
+  background: rgba(0, 0, 0, 0.1);
+}
+
+::-webkit-scrollbar-thumb
+{
+  background: rgba(0, 0, 0, 0.5);
+}
 }

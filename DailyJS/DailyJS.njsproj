@@ -48,6 +48,7 @@ NODE_ENV=development</Environment>
     <Content Include="create-script.txt" />
     <Content Include="public\dev-style\style.less" />
     <Content Include="package.json" />
+    <Content Include="snippets\in-history.html" />
     <Content Include="snippets\in-oops.html" />
     <Content Include="snippets\404.html" />
     <Content Include="snippets\front.html" />
