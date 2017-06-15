@@ -33,6 +33,7 @@ NODE_ENV=development</Environment>
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="config.js" />
     <Compile Include="dateformat.js" />
     <Compile Include="db.js" />
     <Compile Include="public\dev-js\auth.js" />

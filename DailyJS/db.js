@@ -1,15 +1,16 @@
-﻿var mysql = require('mysql');
+﻿var config = require("./config.js");
+var mysql = require('mysql');
 var dateformat = require("./dateformat.js");
 
 var db = (function () {
 
   var _pool = mysql.createPool({
-    host: process.env.dbhost || 'localhost',
-    port: process.env.dbport || 3306,
-    user: process.env.dbuser || 'root',
-    password: process.env.dbpass || '',
-    database: process.env.dbname || 'daily_js',
-    connectionLimit: 5,
+    host: config.dbhost,
+    port: config.dbport,
+    user: config.dbuser,     
+    password: config.dbpass,
+    database: config.dbname,
+    connectionLimit: config.dbconnlimit,
     debug: false
   });
 

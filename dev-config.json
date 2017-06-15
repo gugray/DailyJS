@@ -1,0 +1,9 @@
+{
+  "imageDir": "../_images",
+  "dbhost": "localhost",
+  "dbport": 3306,
+  "dbuser": "root",
+  "dbpass": "",
+  "dbname": "daily_js",
+  "dbconnlimit": 5
+}
