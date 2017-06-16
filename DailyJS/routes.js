@@ -21,7 +21,7 @@ var routes = function (app) {
     ps.then(
       (result) => {
         var model = {
-          prod: process.env.node_env == "production",
+          prod: process.env.NODE_ENV == "production",
           ver: pjson.version,
           pageNotFound: false,
           img: {
@@ -44,7 +44,7 @@ var routes = function (app) {
       (err) => {
         res.status(404);
         res.render('index', {
-          prod: process.env.node_env == "production",
+          prod: process.env.NODE_ENV == "production",
           ver: pjson.version,
           img: null,
           pageNotFound: true
@@ -54,7 +54,7 @@ var routes = function (app) {
 
   app.get('(/inside/history|/inside/history/c/:city|/inside/history/s/:user)', function (req, res) {
     res.render('index', {
-      prod: process.env.node_env == "production",
+      prod: process.env.NODE_ENV == "production",
       ver: pjson.version,
       img: null,
       pageNotFound: false
@@ -113,7 +113,7 @@ var routes = function (app) {
   app.get('*', function (req, res) {
     res.status(404);
     res.render('index', {
-      prod: process.env.node_env == "production",
+      prod: process.env.NODE_ENV == "production",
       img: null,
       pageNotFound: true
     });

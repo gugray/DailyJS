@@ -16,5 +16,5 @@ app.use(express.static("public", { maxage: "365d" }));
 var routes = require("./routes.js")(app);
 
 // Serve.
-var port = process.env.port || 3017;
+var port = process.env.PORT || 3017;
 var server = app.listen(port);
