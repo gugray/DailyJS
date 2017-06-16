@@ -52,7 +52,7 @@ var routes = function (app) {
       });
   });
 
-  app.get('(/inside/history|/inside/history/c/:city|/inside/history/s/:user)', function (req, res) {
+  app.get('(/inside/history|/inside/history/*)', function (req, res) {
     res.render('index', {
       prod: process.env.NODE_ENV == "production",
       ver: pjson.version,
@@ -105,7 +105,15 @@ var routes = function (app) {
 
   app.get("/api/history", function (req, res) {
     if (req.dailyUserName) {
-      res.send("hello");
+      var q = req.query;
+      db.getHistory(q.year, q.month, q.user, q.city).then(
+        (result) => {
+          if (!result) res.status(400).send("invalid request");
+          else res.send(result);
+        },
+        (err) => {
+          res.status(500).send("internal server error");
+        });
     }
     else res.status(401).send("authentication needed");
   });

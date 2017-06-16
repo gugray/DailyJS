@@ -193,11 +193,15 @@ var db = (function () {
     return new Promise((resolve, reject) => {
       ctxt.conn.query(_selAllUsers, (err, rows) => {
         if (err) return reject(err);
-        for (var i = 0; i != rows.length; ++i) {
-          var row = rows[i];
-          ctxt.users.push(new User(row.id, row.usrname, row.defcity, row.secret_hash, row.secret_salt, row.email));
+        try {
+          for (var i = 0; i != rows.length; ++i) {
+            var row = rows[i];
+            ctxt.users.push(new User(row.id, row.usrname, row.defcity, row.secret_hash, row.secret_salt, row.email));
+          }
+          resolve(ctxt);
+        } catch (ex) {
+          return reject(ex);
         }
-        resolve(ctxt);
       });
     });
   }
@@ -218,10 +222,151 @@ var db = (function () {
     });
   }
 
+  var _selMaxDateInt = "SELECT MAX(dateint) AS max FROM images;";
+  var _selAllDateInts = "SELECT dateint FROM images;";
+  var _selMonthImages = "\
+    SELECT images.*, users.usrname\
+    FROM images, users\
+    WHERE user_id = users.id AND dateint > ? AND dateint < ?\
+    ORDER BY dateint DESC;\
+  ";
+
+
+  function splitDateInt(dateInt) {
+    year = Math.floor(dateInt / 10000);
+    month = Math.floor(dateInt / 100) - year * 100;
+    day = dateInt - year * 10000 - month * 100;
+    return { year: year, month: month, day: day };
+  }
+
+  function selHistoryCurrentImages(ctxt) {
+    return new Promise((resolve, reject) => {
+      // Result must be here by now. Otherwise, nothing to do.
+      if (!ctxt.result) resolve(ctxt);
+      var loBound = ctxt.result.currentYear * 10000 + ctxt.result.currentMonth * 100;
+      var hiBound = loBound + 100;
+      ctxt.conn.query(_selMonthImages, [loBound, hiBound], (err, rows) => {
+        try {
+          if (err) return reject(err);
+          ctxt.result.images = [];
+          for (var i = 0; i != rows.length; ++i) {
+            var row = rows[i];
+            var mediumFile = row.imgfile.replace(".jpg", "-md.jpg");
+            mediumFile = mediumFile.replace(".jpeg", "-md.jpeg");
+            var img = {
+              img_url: "/images/" + mediumFile,
+              title: row.title,
+              dateint: row.dateint,
+              dateStrShort: dateformat.intToDateShort(row.dateint),
+              city: row.city,
+              user: row.usrname
+            };
+            ctxt.result.images.push(img);
+          }
+          resolve(ctxt);
+        }
+        catch (ex) {
+          return reject(ex);
+        }
+      });
+    });
+  }
+
+  function selHistoryCalendar(ctxt) {
+    return new Promise((resolve, reject) => {
+      ctxt.conn.query(_selAllDateInts, (err, rows) => {
+        if (err) return reject(err);
+        try {
+          var minYear = 2010;
+          var maxYear = 2010;
+          var activeYears = {};
+          var activeMonths = {};
+          for (var i = 0; i != rows.length; ++i) {
+            var date = splitDateInt(rows[i].dateint);
+            if (date.year > maxYear) maxYear = year;
+            if (date.year < minYear) minYear = year;
+            var xx = activeYears[date.year];
+            if (!xx || date.month > xx) activeYears[date.year] = date.month;
+            if (date.year == ctxt.currentYear) activeMonths[date.month] = 1;
+          }
+          ctxt.result = {
+            years: [],
+            currentYear: ctxt.currentYear,
+            activeMonths: [],
+            currentMonth: ctxt.currentMonth
+          };
+          if (maxYear < new Date().getFullYear()) maxYear = new Date().getFullYear();
+          for (var i = maxYear; i >= minYear; --i) {
+            var xx = activeYears[i];
+            if (xx) ctxt.result.years.push({ year: i, maxMonth: xx });
+            else ctxt.result.years.push({ year: i, maxMonth: 0 });
+          }
+          for (var i = 12; i >= 1; --i) {
+            var xx = activeMonths[i];
+            if (xx) ctxt.result.activeMonths.push(i);
+          }
+          // Are we off the calendar?
+          if (ctxt.result.activeMonths.length == 0) delete ctxt.result;
+          else if (ctxt.currentYear < minYear || ctxt.currentYear > maxYear) delete ctxt.result;
+          // Done here
+          resolve(ctxt);
+        }
+        catch (ex) {
+          return reject(ex);
+        }
+      });
+    });
+  }
+
+  function selHistoryYearMonth(ctxt) {
+    return new Promise((resolve, reject) => {
+      if (ctxt.month && !ctxt.year) return reject("Month specified but year is not");
+      if (ctxt.year && !ctxt.month) return reject("Year specified but month is not");
+      if (ctxt.year) {
+        ctxt.currentYear = ctxt.year;
+        ctxt.currentMonth = ctxt.month;
+        resolve(ctxt);
+      }
+      else {
+        ctxt.conn.query(_selMaxDateInt, (err, rows) => {
+          try {
+            if (rows.length != 1) return reject("Failed to get latest image timestamp");
+            var date = splitDateInt(rows[0].max);
+            ctxt.currentYear = date.year;
+            ctxt.currentMonth = date.month;
+            resolve(ctxt);
+          }
+          catch (ex) {
+            return reject(ex);
+          }
+        });
+      }
+    });
+  }
+
+  function getHistory(year, month, user, city) {
+    return new Promise((resolve, reject) => {
+      ctxt = { year: year, month: month, user: user, city: city };
+      getConn(ctxt)
+        .then(selHistoryYearMonth)
+        .then(selHistoryCalendar)
+        .then(selHistoryCurrentImages)
+        .then((ctxt) => {
+          if (ctxt.conn) { ctxt.conn.release(); ctxt.conn = null; }
+          resolve(ctxt.result);
+        })
+        .catch((err) => {
+          if (ctxt.conn) ctxt.conn.release();
+          return reject(ctxt);
+        });
+    });
+  }
+
   return {
     getLatestImage: getLatestImage,
     getImage: getImage,
-    getAllUsers: getAllUsers
+    getAllUsers: getAllUsers,
+    getHistory: getHistory
   };
 })();
 

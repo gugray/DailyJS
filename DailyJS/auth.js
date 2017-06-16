@@ -1,4 +1,5 @@
-﻿var crypto = require("crypto");
+﻿var config = require("./config.js");
+var crypto = require("crypto");
 var db = require("./db.js");
 
 var auth = (function () {
@@ -7,7 +8,7 @@ var auth = (function () {
   // - Periodic cleanup of expired sessions
 
   // Lease on tokens; if not seen for this long, login expires.
-  var leaseSec = 60;
+  var leaseSec = config.sessionTimeoutSec;
 
   // Maps from auth token to session object
   var sessions = {};
