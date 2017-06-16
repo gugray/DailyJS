@@ -131,8 +131,6 @@ App.auth = (function (path) {
     if ($("#txtResetEmail").hasClass("hidden")) setForgotOrCancel(false);
     // "cancel" clicked
     else setForgotOrCancel(true);
-    // DBG opposite!
-    //$(".btnLoginGo").removeClass("disabled")
     $(".btnLoginGo").addClass("disabled")
   }
 

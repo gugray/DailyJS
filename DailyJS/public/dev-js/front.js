@@ -66,7 +66,7 @@ App.front = (function (path) {
     if (path == "/") {
       var req = App.auth.ajax("/api/getlatestimage", "GET");
       req.done(function (data) {
-        $(".image-holder").css("background-image", "url('" + data.img_url + "')");
+        //$(".image-holder").css("background-image", "url('" + data.img_url + "')");
         $(".photoTitle").text(data.title);
         $(".photoMeta .date").text(data.dateStr);
         $(".photoMeta .city").text(data.city);
@@ -74,6 +74,10 @@ App.front = (function (path) {
         $(".menu .back").attr("href", "/past/" + data.prev_dateint + "/" + data.prev_city);
         $(".menu .back").removeClass("disabled");
         $(".menu .forward").addClass("disabled");
+        var tmpImg = new Image();
+        tmpImg.onload = function () { $(".image-holder").css("background-image", "url('" + data.img_url + "')"); };
+        tmpImg.onerror = function () { App.page.show404(); };
+        tmpImg.src = data.img_url;
       });
       req.fail(function (jqXHR, textStatus, error) {
         App.page.show404();
@@ -85,7 +89,7 @@ App.front = (function (path) {
       var parts = spec.split('/');
       var req = App.auth.ajax("/api/getimage", "GET", { date: parts[0], city: decodeURIComponent(parts[1]) });
       req.done(function (data) {
-        $(".image-holder").css("background-image", "url('" + data.img_url + "')");
+        //$(".image-holder").css("background-image", "url('" + data.img_url + "')");
         $(".photoTitle").text(data.title);
         $(".photoMeta .date").text(data.dateStr);
         $(".photoMeta .city").text(data.city);
@@ -104,11 +108,15 @@ App.front = (function (path) {
         else {
           $(".menu .forward").addClass("disabled");
         }
+        var tmpImg = new Image();
+        tmpImg.onload = function () { $(".image-holder").css("background-image", "url('" + data.img_url + "')"); };
+        tmpImg.onerror = function () { App.page.show404(); };
+        tmpImg.src = data.img_url;
       });
       req.fail(function (jqXHR, textStatus, error) {
         App.page.show404();
       });
-   }
+    }
   }
 
   return {
