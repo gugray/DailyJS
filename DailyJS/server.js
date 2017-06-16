@@ -12,7 +12,7 @@ app.set("view engine", "ejs");
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use("/images", express.static(config.imageDir, { maxage: "365d" }));
-app.use(express.static(__dirname + "/public", { maxage: "365d" }));
+app.use(express.static("public", { maxage: "365d" }));
 var routes = require("./routes.js")(app);
 
 // Serve.

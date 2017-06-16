@@ -2,7 +2,7 @@
 
 var config = (function () {
   if (process.env.node_env == "production")
-    etc.file("/etc/dailjs/config.json");
+    etc.file("/etc/dailyjs/config.json");
   else etc.file(__dirname + "/../dev-config.json");
   return etc.toJSON();
 })();
