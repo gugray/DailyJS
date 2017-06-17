@@ -157,9 +157,14 @@ App.history = (function (path) {
     // Close
     html += "</div>"; // <div class='inner-history'>
     $(".content-inner").html(html);
-    // Fancy scrollbar
+    // Fancy scrollbar: thumbs
     // http://noraesae.github.io/perfect-scrollbar/
     $(".inner-history .thumbs").perfectScrollbar();
+    // Fancy scrollbar and dynamic max-height: filter drop-downs
+    var xa = $(".inner-history").height();
+    var xb = $(".inner-history").offset().top;
+    var xc = $(".nav .sep").first().offset().top;
+    $(".inner-history .filterContent").css("max-height", (xa + xb - xc - 20) + "px");
     $(".inner-history .filterContent").perfectScrollbar();
     // Navigation
     $(".navParent div").click(function () {
@@ -230,6 +235,8 @@ App.history = (function (path) {
 
   function renderSticker() {
     $(".stickerTop").html(zsnippets["sticker-all-inside"]);
+    var helloHtml = "Hello, <span class='userName'>" + App.page.esc(App.auth.getUserName()) + "</span>!";
+    $(".sticker-inside .welcome").html(helloHtml)
     $(".menuHistory").addClass("selected");
     $(".sticker-inside .enter").click(function () {
       App.page.inPageNavigate("/");

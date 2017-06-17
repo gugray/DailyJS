@@ -67,7 +67,7 @@ var auth = (function () {
     var token = crypto.randomBytes(64).toString('hex');
     while (token in sessions) token = crypto.randomBytes(64).toString('hex');
     sessions[token] = new Session(user.usrname, user.id);
-    return token;
+    return { token: token, user: user.usrname };
   }
 
   function login(secret, prevToken) {

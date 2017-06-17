@@ -86,7 +86,7 @@ var routes = function (app) {
     if (req.body.secret) {
       auth.login(req.body.secret, req.body.prevToken).then(
         (result) => {
-          if (result) res.send({ token: result });
+          if (result) res.send({ token: result.token, user: result.user });
           else res.status(401).send("wrong secret");
         },
         (err) => {

@@ -23,10 +23,14 @@ App.auth = (function (path) {
     });
     request.done(function (respData) {
       localStorage.setItem("token", respData.token);
+      localStorage.setItem("user", respData.user);
       callback(true);
     });
     request.fail(function () {
-      if (localStorage.getItem("token")) localStorage.removeItem("token");
+      if (localStorage.getItem("token")) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+      }
       callback(false);
     });
   }
@@ -53,6 +57,7 @@ App.auth = (function (path) {
       var loggedIn = xtra.getResponseHeader("LoggedIn") === "true";
       if (!loggedIn && wasLoggedIn && localStorage.getItem("token")) {
         localStorage.removeItem("token");
+        localStorage.removeItem("user");
       }
       if (doneCallback) doneCallback(data);
     });
@@ -201,6 +206,8 @@ App.auth = (function (path) {
 
     // Returns yes if we're logged on (or think so, based on presence of an auth token).
     isLoggedIn: isLoggedIn,
+
+    getUserName: function () { return localStorage.getItem("user"); },
 
     // Attempts to log in
     login: function (secret, callback) { doLogin(secret, callback); },
