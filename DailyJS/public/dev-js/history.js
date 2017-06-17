@@ -241,6 +241,10 @@ App.history = (function (path) {
     $(".sticker-inside .enter").click(function () {
       App.page.inPageNavigate("/");
     });
+    $(".sticker-inside .menuSignout").click(function () {
+      App.auth.logout();
+      App.page.inPageNavigate("/");
+    });
   }
 
   function renderOops() {

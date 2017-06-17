@@ -28,7 +28,7 @@ App.front = (function (path) {
     var contentAlreadyThere = true;
     // Build page DOM if missing
     if ($(".stickerFront").length == 0) {
-      $(".stickerTop").html(zsnippets["front"]);
+      $(".stickerTop").html(zsnippets["sticker-front"]);
       $(".content-inner").html("<div class='image-holder'>&nbsp;</div>");
       contentAlreadyThere = false;
     }
@@ -37,7 +37,6 @@ App.front = (function (path) {
     // Login panel with behavior
     var elmLoginPanel = $(zsnippets["loginpanel-inner"]);
     elmLoginPanel.insertBefore(".photoMeta");
-    //$(".photoMeta").insertBefore(elmLoginPanel);
     App.auth.controlLogin(pathOnLogin);
     // Let caller now if we still need to fetch data
     return !contentAlreadyThere;

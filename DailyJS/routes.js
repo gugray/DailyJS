@@ -61,6 +61,11 @@ var routes = function (app) {
     });
   });
 
+  app.get("/api/ping", function (req, res) {
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.send("pong");
+  });
+
   app.get("/api/getlatestimage", function (req, res) {
     db.getLatestImage().then(
       (result) => {
@@ -94,6 +99,20 @@ var routes = function (app) {
         });
     }
     else res.status(400).send("invalid request");
+  });
+
+  app.post("/api/logout", function (req, res) {
+    if (req.dailyToken) {
+      auth.logout(req.dailyToken).then(
+        (result) => {
+          if (result) res.send("bye");
+          else res.status(401).send("invalid token");
+        },
+        (err) => {
+          res.status(500).send("internal server error");
+        });
+    }
+    else res.status(401).send("not authenticated");
   });
 
   app.post("/api/resetsecret", function (req, res) {

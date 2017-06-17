@@ -35,6 +35,10 @@ App.auth = (function (path) {
     });
   }
 
+  function doLogout() {
+    doAjax("/api/logout", "POST");
+  }
+
   function doAjax(url, type, data) {
     var doneCallback;
     var failCallback;
@@ -211,6 +215,8 @@ App.auth = (function (path) {
 
     // Attempts to log in
     login: function (secret, callback) { doLogin(secret, callback); },
+
+    logout: doLogout,
 
     renderLogin: renderLogin,
 

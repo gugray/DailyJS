@@ -15,6 +15,9 @@ App.page = (function () {
     $(window).on('popstate', function (e) {
       parseLocation();
     });
+    // After first ("real") page load, send a ping
+    // Response will update our logged-in status (session may have expired, but token still in local store)
+    App.auth.ajax("/api/ping", "GET");
   });
 
   function parseLocation() {

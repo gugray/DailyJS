@@ -46,6 +46,7 @@ var auth = (function () {
         res.header("LoggedIn", true);
         req.dailyUserName = s.userName;
         req.dailyUserId = s.userId;
+        req.dailyToken = token;
       }
     }
     next();
@@ -83,9 +84,19 @@ var auth = (function () {
     });
   }
 
+  function logout(token) {
+    return new Promise((resolve, reject) => {
+      var s = getSession(token);
+      if (!s) resolve(false);
+      delete sessions[token];
+      resolve(true);
+    });
+  }
+
   return {
     sessionWare: sessionWare,
-    login: login
+    login: login,
+    logout: logout
   };
 
 })();
