@@ -1,5 +1,5 @@
 ﻿//= sticker-front : sticker-front.html
-//= 404 : 404.html
+//= in-404 : in-404.html
 //= in-login : in-login.html
 //= in-oops : in-oops.html
 //= loginpanel-inner : loginpanel-inner.html

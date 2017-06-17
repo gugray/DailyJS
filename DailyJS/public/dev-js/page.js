@@ -61,7 +61,7 @@ App.page = (function () {
 
   function show404() {
     $(".stickerTop").html("");
-    $(".content-inner").html(zsnippets["404"]);
+    $(".content-inner").html(zsnippets["in-404"]);
   }
 
   function esc(s) {

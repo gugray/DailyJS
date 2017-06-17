@@ -42,14 +42,14 @@ var db = (function () {
   }
 
   var _selLatest = "\
-    SELECT imgfile, title, dateint, city, usrname\
+    SELECT imgfile, title, usrname, images.id, dateint, city\
     FROM images, users\
     WHERE images.user_id = users.id\
-    ORDER BY images.id DESC LIMIT 2;\
+    ORDER BY images.id DESC LIMIT 1;\
   ";
 
   var _selPast = "\
-    SELECT imgfile, title, usrname, images.id\
+    SELECT imgfile, title, usrname, images.id, dateint\
     FROM images, users\
     WHERE images.user_id = users.id AND dateint=? AND city=?\
   ";
@@ -57,15 +57,15 @@ var db = (function () {
   var _selPrev = "\
     SELECT dateint, city\
     FROM images\
-    WHERE id < ?\
-    ORDER BY id DESC LIMIT 1;\
+    WHERE (dateint < ?) OR (dateint = ? AND id < ?) \
+    ORDER BY dateint DESC, id DESC LIMIT 1;\
   ";
 
   var _selNext = "\
     SELECT dateint, city\
     FROM images\
-    WHERE id > ?\
-    ORDER BY id ASC LIMIT 1;\
+    WHERE (dateint > ?) OR (dateint = ? AND id > ?)\
+    ORDER BY dateint ASC, id ASC LIMIT 1;\
   ";
 
   function getConn(ctxt) {
@@ -83,16 +83,7 @@ var db = (function () {
       ctxt.conn.query(_selLatest, (err, rows) => {
         try {
           if (err) return reject(err);
-          var prev_dateint = null;
-          var prev_city = null;
-          if (rows.length > 1) {
-            prev_dateint = rows[1].dateint;
-            prev_city = rows[1].city;
-          }
-          ctxt.res = new DayImage(
-            rows[0].imgfile, rows[0].title, rows[0].dateint, rows[0].city, rows[0].usrname,
-            prev_dateint, prev_city,
-            null, null);
+          ctxt.rowsPast = rows;
           resolve(ctxt);
         } catch (ex) {
           return reject(ex);
@@ -113,7 +104,7 @@ var db = (function () {
 
   function selPrev(ctxt) {
     return new Promise((resolve, reject) => {
-      ctxt.conn.query(_selPrev, [ctxt.rowsPast[0].id], (err, rowsPrev) => {
+      ctxt.conn.query(_selPrev, [ctxt.rowsPast[0].dateint, ctxt.rowsPast[0].dateint, ctxt.rowsPast[0].id], (err, rowsPrev) => {
         if (err) return reject(err);
         ctxt.rowsPrev = rowsPrev;
         resolve(ctxt);
@@ -123,7 +114,7 @@ var db = (function () {
 
   function selNext(ctxt) {
     return new Promise((resolve, reject) => {
-      ctxt.conn.query(_selNext, [ctxt.rowsPast[0].id], (err, rowsNext) => {
+      ctxt.conn.query(_selNext, [ctxt.rowsPast[0].dateint, ctxt.rowsPast[0].dateint, ctxt.rowsPast[0].id], (err, rowsNext) => {
         if (err) return reject(err);
         ctxt.rowsNext = rowsNext;
         resolve(ctxt);
@@ -144,6 +135,8 @@ var db = (function () {
       next_dateint = ctxt.rowsNext[0].dateint;
       next_city = ctxt.rowsNext[0].city;
     }
+    if (!ctxt.dateint) ctxt.dateint = ctxt.rowsPast[0].dateint;
+    if (!ctxt.city) ctxt.city = ctxt.rowsPast[0].city;
     var res = new DayImage(
       ctxt.rowsPast[0].imgfile, ctxt.rowsPast[0].title, ctxt.dateint, ctxt.city, ctxt.rowsPast[0].usrname,
       prev_dateint, prev_city,
@@ -156,9 +149,11 @@ var db = (function () {
       var ctxt = {};
       getConn(ctxt)
         .then(selLatest)
+        .then(selPrev)
+        .then(selNext)
         .then((data) => {
           if (ctxt.conn) { ctxt.conn.release(); ctxt.conn = null; }
-          resolve(ctxt.res);
+          resolve(prepareImage(ctxt));
         })
         .catch((err) => {
           if (ctxt.conn) ctxt.conn.release();
@@ -232,19 +227,19 @@ var db = (function () {
     SELECT images.*, users.usrname\
     FROM images, users\
     WHERE user_id = users.id AND dateint > ? AND dateint < ?\
-    ORDER BY dateint DESC;\
+    ORDER BY dateint DESC, images.id DESC;\
   ";
   var _selMonthImagesCity = "\
     SELECT images.*, users.usrname\
     FROM images, users\
     WHERE user_id = users.id AND dateint > ? AND dateint < ? AND city = ?\
-    ORDER BY dateint DESC;\
+    ORDER BY dateint DESC, images.id DESC;\
   ";
   var _selMonthImagesUser = "\
     SELECT images.*, users.usrname\
     FROM images, users\
     WHERE user_id = users.id AND dateint > ? AND dateint < ? AND usrname = ?\
-    ORDER BY dateint DESC;\
+    ORDER BY dateint DESC, images.id DESC;\
   ";
   var _selHistoryCities = "SELECT DISTINCT city FROM images ORDER BY city ASC;";
   var _selHistoryUsers = "\
