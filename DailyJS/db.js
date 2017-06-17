@@ -223,14 +223,35 @@ var db = (function () {
   }
 
   var _selMaxDateInt = "SELECT MAX(dateint) AS max FROM images;";
+  var _selMaxDateIntCity = "SELECT MAX(dateint) AS max FROM images WHERE city = ?;";
+  var _selMaxDateIntUser = "SELECT MAX(dateint) AS max FROM images, users WHERE user_id=users.id AND usrname = ?;";
   var _selAllDateInts = "SELECT dateint FROM images;";
+  var _selAllDateIntsCity = "SELECT dateint FROM images WHERE city = ?;";
+  var _selAllDateIntsUser = "SELECT dateint FROM images, users WHERE user_id=users.id AND usrname = ?;";
   var _selMonthImages = "\
     SELECT images.*, users.usrname\
     FROM images, users\
     WHERE user_id = users.id AND dateint > ? AND dateint < ?\
     ORDER BY dateint DESC;\
   ";
-
+  var _selMonthImagesCity = "\
+    SELECT images.*, users.usrname\
+    FROM images, users\
+    WHERE user_id = users.id AND dateint > ? AND dateint < ? AND city = ?\
+    ORDER BY dateint DESC;\
+  ";
+  var _selMonthImagesUser = "\
+    SELECT images.*, users.usrname\
+    FROM images, users\
+    WHERE user_id = users.id AND dateint > ? AND dateint < ? AND usrname = ?\
+    ORDER BY dateint DESC;\
+  ";
+  var _selHistoryCities = "SELECT DISTINCT city FROM images ORDER BY city ASC;";
+  var _selHistoryUsers = "\
+    SELECT DISTINCT usrname FROM users, images\
+    WHERE user_id = users.id\
+    ORDER BY usrname ASC;\
+  ";
 
   function splitDateInt(dateInt) {
     year = Math.floor(dateInt / 10000);
@@ -243,9 +264,14 @@ var db = (function () {
     return new Promise((resolve, reject) => {
       // Result must be here by now. Otherwise, nothing to do.
       if (!ctxt.result) resolve(ctxt);
+      if (ctxt.city && ctxt.user) reject("Cannot filter by city and date at the same time");
       var loBound = ctxt.result.currentYear * 10000 + ctxt.result.currentMonth * 100;
       var hiBound = loBound + 100;
-      ctxt.conn.query(_selMonthImages, [loBound, hiBound], (err, rows) => {
+      var query = _selMonthImages;
+      var qparams = [loBound, hiBound];
+      if (ctxt.city) { query = _selMonthImagesCity; qparams.push(ctxt.city); }
+      if (ctxt.user) { query = _selMonthImagesUser; qparams.push(ctxt.user); }
+      ctxt.conn.query(query, qparams, (err, rows) => {
         try {
           if (err) return reject(err);
           ctxt.result.images = [];
@@ -274,7 +300,12 @@ var db = (function () {
 
   function selHistoryCalendar(ctxt) {
     return new Promise((resolve, reject) => {
-      ctxt.conn.query(_selAllDateInts, (err, rows) => {
+      if (ctxt.city && ctxt.user) reject("Cannot filter by city and date at the same time");
+      var query = _selAllDateInts;
+      var qparams = [];
+      if (ctxt.city) { query = _selAllDateIntsCity; qparams.push(ctxt.city); }
+      if (ctxt.user) { query = _selAllDateIntsUser; qparams.push(ctxt.user); }
+      ctxt.conn.query(query, qparams, (err, rows) => {
         if (err) return reject(err);
         try {
           var minYear = 2010;
@@ -308,6 +339,10 @@ var db = (function () {
           // Are we off the calendar?
           if (ctxt.result.activeMonths.length == 0) delete ctxt.result;
           else if (ctxt.currentYear < minYear || ctxt.currentYear > maxYear) delete ctxt.result;
+          else {
+            var xx = activeMonths[Math.floor(ctxt.result.currentMonth)];
+            if (!xx) delete ctxt.result;
+          }
           // Done here
           resolve(ctxt);
         }
@@ -328,7 +363,12 @@ var db = (function () {
         resolve(ctxt);
       }
       else {
-        ctxt.conn.query(_selMaxDateInt, (err, rows) => {
+      if (ctxt.city && ctxt.user) reject("Cannot filter by city and date at the same time");
+        var query = _selMaxDateInt;
+        var qparams = [];
+        if (ctxt.city) { query = _selMaxDateIntCity; qparams.push(ctxt.city); }
+        if (ctxt.user) { query = _selMaxDateIntUser; qparams.push(ctxt.user); }
+        ctxt.conn.query(query, qparams, (err, rows) => {
           try {
             if (rows.length != 1) return reject("Failed to get latest image timestamp");
             var date = splitDateInt(rows[0].max);
@@ -344,6 +384,42 @@ var db = (function () {
     });
   }
 
+  function selHistoryCities(ctxt) {
+    return new Promise((resolve, reject) => {
+      if (!ctxt.result) resolve(ctxt);
+      ctxt.conn.query(_selHistoryCities, (err, rows) => {
+        try {
+          ctxt.result.cities = [];
+          for (var i = 0; i != rows.length; ++i) {
+            ctxt.result.cities.push(rows[i].city);
+          }
+          resolve(ctxt);
+        }
+        catch (ex) {
+          return reject(ex);
+        }
+      });
+    });
+  }
+
+  function selHistoryUsers(ctxt) {
+    return new Promise((resolve, reject) => {
+      if (!ctxt.result) resolve(ctxt);
+      ctxt.conn.query(_selHistoryUsers, (err, rows) => {
+        try {
+          ctxt.result.users = [];
+          for (var i = 0; i != rows.length; ++i) {
+            ctxt.result.users.push(rows[i].usrname);
+          }
+          resolve(ctxt);
+        }
+        catch (ex) {
+          return reject(ex);
+        }
+      });
+    });
+  }
+
   function getHistory(year, month, user, city) {
     return new Promise((resolve, reject) => {
       ctxt = { year: year, month: month, user: user, city: city };
@@ -351,6 +427,8 @@ var db = (function () {
         .then(selHistoryYearMonth)
         .then(selHistoryCalendar)
         .then(selHistoryCurrentImages)
+        .then(selHistoryCities)
+        .then(selHistoryUsers)
         .then((ctxt) => {
           if (ctxt.conn) { ctxt.conn.release(); ctxt.conn = null; }
           resolve(ctxt.result);

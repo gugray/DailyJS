@@ -9,7 +9,11 @@ App.history = (function (path) {
   "use strict";
 
   var path = path;
+  var city = null;
+  var user = null;
   var navBase = null;
+  var cities = null;
+  var users = null;
   enter();
 
   // Called when front first shown, or navigated to from back
@@ -30,6 +34,8 @@ App.history = (function (path) {
       App.page.inPageNavigate("/inside/history");
       return;
     }
+    city = params.city ? decodeURIComponent(params.city) : null;
+    user = params.user ? decodeURIComponent(params.user) : null;
     // Our position on calendar, with filter - needed for rendered nav links
     navBase = "/inside/history";
     if (params.city) navBase += "/c/" + encodeURIComponent(params.city);
@@ -38,6 +44,8 @@ App.history = (function (path) {
     var req = App.auth.ajax("/api/history", "GET", params);
     req.done(function (data) {
       if (fullRender) renderSticker();
+      cities = data.cities;
+      users = data.users;
       renderInner(data);
     });
     req.fail(function (jqXHR, textStatus, error) {
@@ -93,9 +101,9 @@ App.history = (function (path) {
       var dataNav = "/past/" + img.dateint + "/" + encodeURIComponent(img.city);
       html += "<div class='thumb' data-nav='" + dataNav + "'>";
       html += "<div class='meta'>";
-      html += img.dateStrShort + " &bull; " + App.page.esc(img.user) + "<br/>" + App.page.esc(img.city);
+      html += img.dateStrShort + "<br/>" + App.page.esc(img.city) + " &bull; " + App.page.esc(img.user);
       html += "<div class='image'><img src='";
-      html += img.img_url + "' alt='" + App.page.esc(img.title) + "' /></div>";
+      html += img.img_url + "' /></div>";
       html += "<div class='title'>" + App.page.esc(img.title) + "</div>";
       html += "</div>"; // <div class='meta'>
       html += "</div>"; // <div class='thumb'>
@@ -103,7 +111,14 @@ App.history = (function (path) {
     html += "</div>"; // <div class='thumbs'>
     // Calendar
     html += "<div class='nav'>";
-    html += "<div><div class='navUser'>all sojourners</div><div class='navCity'>all cities</div></div>";
+    html += "<div><div class='navUser'>";
+    if (!user) html += "all sojourners";
+    else html += App.page.esc(user);
+    html += "</div><div class='navCity'>";
+    if (!city) html += "all cities";
+    else html += App.page.esc(city);
+    html += "</div></div>";
+    html += "<div class='calendar'>";
     html += "<div class='sep'></div>";
     // Years
     for (var i = 0; i != data.years.length; ++i) {
@@ -135,6 +150,9 @@ App.history = (function (path) {
       html += "<div class='" + cls + "' data-nav='" + dataNav + "'>" + monthsShort[i - 1] + "</div>";
     }
     html += "</div>"; // <div class='navMonth'>
+    html += "</div>"; // <div class='calendar'>
+    html += renderFilter(users);
+    html += renderFilter(cities);
     html += "</div>"; // <div class='nav'>
     // Close
     html += "</div>"; // <div class='inner-history'>
@@ -142,6 +160,7 @@ App.history = (function (path) {
     // Fancy scrollbar
     // http://noraesae.github.io/perfect-scrollbar/
     $(".inner-history .thumbs").perfectScrollbar();
+    $(".inner-history .filterContent").perfectScrollbar();
     // Navigation
     $(".navParent div").click(function () {
       if ($(this).hasClass("empty")) return;
@@ -150,6 +169,63 @@ App.history = (function (path) {
     $(".thumb").click(function () {
       App.page.inPageNavigate($(this).data("nav"));
     });
+    $(".navUser").click(function () {
+      if ($(".filter.users").hasClass("visible")) {
+        $(".filter.users").removeClass("visible");
+        $(".calendar").removeClass("hidden");
+      }
+      else {
+        $(".filter.cities").removeClass("visible");
+        $(".filter.users").addClass("visible");
+        $(".calendar").addClass("hidden");
+      }
+    });
+    $(".navCity").click(function () {
+      if ($(".filter.cities").hasClass("visible")) {
+        $(".filter.cities").removeClass("visible");
+        $(".calendar").removeClass("hidden");
+      }
+      else {
+        $(".filter.users").removeClass("visible");
+        $(".filter.cities").addClass("visible");
+        $(".calendar").addClass("hidden");
+      }
+    });
+    $(".filter .nofilter div").click(function () {
+      App.page.inPageNavigate("/inside/history/" + data.currentYear + "/" + data.currentMonth);
+    });
+    $(".filter.users .table div div").click(function () {
+      App.page.inPageNavigate("/inside/history/u/" + encodeURIComponent($(this).text()));
+    });
+    $(".filter.cities .table div div").click(function () {
+      App.page.inPageNavigate("/inside/history/c/" + encodeURIComponent($(this).text()));
+    });
+  }
+
+  function renderFilter(arr) {
+    var html = "";
+    var cls = arr == cities ? "cities" : "users";
+    var nfStr = arr == cities ? "all cities" : "all sojourners";
+    html += "<div class='filter " + cls + "'>";
+    html += "<div class='diamond'>&nbsp;</div>";
+    html += "<div class='filterContent'>";
+    html += "<div class='nofilter'><div>" + nfStr + "</div></div>";
+    html += "<div class='table'>";
+
+    var lim = Math.ceil(arr.length / 2);
+    for (var i = 0; i < lim; ++i) {
+      var strLeft = arr[i];
+      var strRight = null;
+      if (lim + i < arr.length) strRight = arr[lim + i];
+      html += "<div><div>" + App.page.esc(strLeft) + "</div>";
+      if (strRight) html += "<div>" + App.page.esc(strRight) + "</div>";
+      html += "</div>";
+    }
+
+    html += "</div>"; // <div class='table'>
+    html += "</div>"; // <div class='filterContent'>
+    html += "</div>"; // <div class='filter users'>
+    return html;
   }
 
   function renderSticker() {

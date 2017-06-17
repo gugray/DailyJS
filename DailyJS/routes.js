@@ -106,7 +106,9 @@ var routes = function (app) {
   app.get("/api/history", function (req, res) {
     if (req.dailyUserName) {
       var q = req.query;
-      db.getHistory(q.year, q.month, q.user, q.city).then(
+      var qUser = q.user ? decodeURIComponent(q.user) : null;
+      var qCity = q.city ? decodeURIComponent(q.city) : null;
+      db.getHistory(q.year, q.month, qUser, qCity).then(
         (result) => {
           if (!result) res.status(400).send("invalid request");
           else res.send(result);
