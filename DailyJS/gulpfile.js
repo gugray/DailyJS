@@ -41,7 +41,9 @@ gulp.task('scripts', ['snippets'], function () {
     './public/dev-js/auth.js',
     './public/dev-js/page.js',
     './public/dev-js/front.js',
-    './public/dev-js/history.js'
+    './public/dev-js/inside.js',
+    './public/dev-js/history.js',
+    './public/dev-js/profile.js'
   ])
     .pipe(uglify().on('error', function (e) { console.log(e); }))
     .pipe(concat('app.min.js'))

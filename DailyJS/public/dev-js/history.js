@@ -43,7 +43,7 @@ App.history = (function (path) {
     // Retrieve history to render
     var req = App.auth.ajax("/api/history", "GET", params);
     req.done(function (data) {
-      if (fullRender) renderSticker();
+      if (fullRender) App.inside.renderSticker();
       cities = data.cities;
       users = data.users;
       renderInner(data);
@@ -55,7 +55,7 @@ App.history = (function (path) {
         // or if something has gone wrong. Redirect to param-less history if we're not there;
         // show oops if we're already there.
         if (path == "/inside/history") {
-          if (fullRender) renderSticker();
+          if (fullRender) App.inside.renderSticker();
           renderOops();
         }
         else App.page.inPageNavigate("/inside/history");
@@ -231,20 +231,6 @@ App.history = (function (path) {
     html += "</div>"; // <div class='filterContent'>
     html += "</div>"; // <div class='filter users'>
     return html;
-  }
-
-  function renderSticker() {
-    $(".stickerTop").html(zsnippets["sticker-all-inside"]);
-    var helloHtml = "Hello, <span class='userName'>" + App.page.esc(App.auth.getUserName()) + "</span>!";
-    $(".sticker-inside .welcome").html(helloHtml)
-    $(".menuHistory").addClass("selected");
-    $(".sticker-inside .enter").click(function () {
-      App.page.inPageNavigate("/");
-    });
-    $(".sticker-inside .menuSignout").click(function () {
-      App.auth.logout();
-      App.page.inPageNavigate("/");
-    });
   }
 
   function renderOops() {

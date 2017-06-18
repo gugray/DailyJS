@@ -39,11 +39,11 @@ var routes = function (app) {
         if (model.img.prev_url == "#") model.img.prev_cls = "disabled";
         if (model.img.next_url == "#") model.img.next_cls = "disabled";
         if (noCache) res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-        res.render('index', model);
+        res.render(__dirname + "/index.ejs", model);
       },
       (err) => {
         res.status(404);
-        res.render('index', {
+        res.render(__dirname + "/index.ejs", {
           prod: process.env.NODE_ENV == "production",
           ver: pjson.version,
           img: null,
@@ -53,7 +53,7 @@ var routes = function (app) {
   });
 
   app.get('(/inside/history|/inside/history/*)', function (req, res) {
-    res.render('index', {
+    res.render(__dirname + "/index.ejs", {
       prod: process.env.NODE_ENV == "production",
       ver: pjson.version,
       img: null,
@@ -141,7 +141,7 @@ var routes = function (app) {
 
   app.get('*', function (req, res) {
     res.status(404);
-    res.render('index', {
+    res.render(__dirname + "/index.ejs", {
       prod: process.env.NODE_ENV == "production",
       img: null,
       pageNotFound: true

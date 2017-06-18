@@ -35,7 +35,7 @@ App.front = (function (path) {
     // Enter icon click
     $(".menu .enter").click(onEnterClicked);
     // Login panel with behavior
-    var elmLoginPanel = $(zsnippets["loginpanel-inner"]);
+    var elmLoginPanel = $(zsnippets["chunk-loginpanel"]);
     elmLoginPanel.insertBefore(".photoMeta");
     App.auth.controlLogin(pathOnLogin);
     // Let caller now if we still need to fetch data

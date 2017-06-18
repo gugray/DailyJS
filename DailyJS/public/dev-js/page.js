@@ -77,6 +77,7 @@ App.page = (function () {
       pages.push(ctrl);
     },
     esc: esc,
+    path: function () { return path; },
     show404: show404,
     inPageNavigate: inPageNavigate,
     reEnterCurrent: function() { ctrl.enter(); }

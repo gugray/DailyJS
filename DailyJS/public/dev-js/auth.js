@@ -74,7 +74,7 @@ App.auth = (function (path) {
   function renderLogin() {
     $(".stickerTop").html("");
     var html = zsnippets["in-login"];
-    html = html.replace("{{loginpanel-inner}}", zsnippets["loginpanel-inner"]);
+    html = html.replace("{{loginpanel-inner}}", zsnippets["chunk-loginpanel"]);
     $(".content-inner").html(html);
     $("#txtSecret").val("");
     $("#txtSecret").focus();
