@@ -5,6 +5,7 @@ var pjson = require('./package.json');
 
 var routes = function (app) {
 
+  // Front page: rendered server-side too, for faster firs response (and non-JS browsers)
   app.get('(/|/past/:date/:city)', function (req, res) {
     // Load picture info, populate page
     var ps = null;
@@ -49,10 +50,12 @@ var routes = function (app) {
           img: null,
           pageNotFound: true
         });
-      });
+      }
+    );
   });
 
-  app.get('(/inside/history|/inside/history/*)', function (req, res) {
+  // Known pages that are only rendered app-side
+  app.get('(/inside/history|/inside/history/*|/inside/profile)', function (req, res) {
     res.render(__dirname + "/index.ejs", {
       prod: process.env.NODE_ENV == "production",
       ver: pjson.version,
@@ -74,7 +77,8 @@ var routes = function (app) {
       },
       (err) => {
         res.status(404).send("no such image");
-      });
+      }
+    );
   });
 
   app.get("/api/getimage", function (req, res) {
@@ -84,7 +88,8 @@ var routes = function (app) {
       },
       (err) => {
         res.status(404).send("no such image");
-      });
+      }
+    );
   });
 
   app.post("/api/login", function (req, res) {
@@ -96,7 +101,8 @@ var routes = function (app) {
         },
         (err) => {
           res.status(500).send("internal server error");
-        });
+        }
+      );
     }
     else res.status(400).send("invalid request");
   });
@@ -110,7 +116,8 @@ var routes = function (app) {
         },
         (err) => {
           res.status(500).send("internal server error");
-        });
+        }
+      );
     }
     else res.status(401).send("not authenticated");
   });
@@ -134,11 +141,23 @@ var routes = function (app) {
         },
         (err) => {
           res.status(500).send("internal server error");
-        });
+        }
+      );
     }
     else res.status(401).send("authentication needed");
   });
 
+  app.get("/api/getprofile", function (req, res) {
+    if (req.dailyUserName) {
+      db.getUserProfile(req.dailyUserId).then(
+        (result) => { res.send(result); },
+        (err) => { res.status(500).send("internal server error"); }
+      );
+    }
+    else res.status(401).send("authentication needed");
+  });
+
+  // All other GET requests: we serve a juicy 404
   app.get('*', function (req, res) {
     res.status(404);
     res.render(__dirname + "/index.ejs", {

@@ -435,11 +435,50 @@ var db = (function () {
     });
   }
 
+  var _selUserProfile = "SELECT usrname, defcity, email FROM users WHERE id = ?;"
+
+  function selUserProfile(ctxt) {
+    return new Promise((resolve, reject) => {
+      ctxt.conn.query(_selUserProfile, [ctxt.userId], (err, rows) => {
+        try {
+          if (rows.length != 1) return reject("Failed to retrieve user record");
+          var row = rows[0];
+          ctxt.result = {
+            usrname: row.usrname,
+            defcity: row.defcity,
+            email: row.email
+          };
+          resolve(ctxt);
+        }
+        catch (ex) {
+          return reject(ex);
+        }
+      });
+    });
+  }
+
+  function getUserProfile(userId) {
+    return new Promise((resolve, reject) => {
+      ctxt = { userId: userId };
+      getConn(ctxt)
+        .then(selUserProfile)
+        .then((ctxt) => {
+          if (ctxt.conn) { ctxt.conn.release(); ctxt.conn = null; }
+          resolve(ctxt.result);
+        })
+        .catch((err) => {
+          if (ctxt.conn) ctxt.conn.release();
+          return reject(ctxt);
+        });
+    });
+  }
+
   return {
     getLatestImage: getLatestImage,
     getImage: getImage,
     getAllUsers: getAllUsers,
-    getHistory: getHistory
+    getHistory: getHistory,
+    getUserProfile: getUserProfile
   };
 })();
 

@@ -22,7 +22,37 @@ App.profile = (function (path) {
   }
 
   function fetchData(fullRender) {
-    if (fullRender) App.inside.renderSticker();
+    var req = App.auth.ajax("/api/getprofile", "GET");
+    req.done(function (data) {
+      if (fullRender) App.inside.renderSticker();
+      renderInner(data);
+    });
+    req.fail(function (jqXHR, textStatus, error) {
+      if (jqXHR.status == 401) App.auth.renderLogin();
+      else {
+        if (fullRender) App.inside.renderSticker();
+        renderOops();
+      }
+    });
+  }
+
+  function renderInner(data) {
+    $(".content-inner").html(zsnippets["in-profile"]);
+    $(".formRow.defCity .value").text(data.defcity);
+    $(".formRow.email .value").text(data.email);
+    // Edit action
+    $(".commands i").click(function () {
+      var elmRow = $(this).closest(".formRow");
+      elmRow.addClass("editing");
+      $(".formRow .commands").addClass("hidden");
+      elmRow.find("input:first-child").focus();
+    });
+    // Cancel
+    $(".editor .cancel").click(function () {
+      $(".editor input").val("");
+      $(".formRow").removeClass("editing");
+      $(".formRow .commands").removeClass("hidden");
+    });
   }
 
   function renderOops() {
