@@ -19,7 +19,7 @@ App.inside = (function () {
         App.page.inPageNavigate("/");
       });
       // Sign out event handler
-      $(".menu-item.menuSignout").click(function () {
+      $(".menuSignout").click(function () {
         App.auth.logout();
         App.page.inPageNavigate("/");
       });

@@ -6,26 +6,28 @@
     </div>
     <div class="editor">
       <input type="text" maxlength="32" id="txtDefCity" placeholder="default city" />
-      <div class="save">save</div>
-      <div class="cancel">cancel</div>
+      <div class="cancelsave save">save</div>
+      <div class="cancelsave cancel">cancel</div>
+      <div class="progress"><i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i></div>
     </div>
     <div class="commands"><i class="fa fa-pencil"></i></div>
   </div>
   <div class="formRow secret">
     <div class="label">secret</div>
     <div class="field">
-      <div class="value"><i>-- it's secret --</i></div>
+      <div class="value"><i>only you know</i></div>
     </div>
     <div class="editor">
       <input type="password" maxlength="32" id="txtOldSecret" placeholder="current secret" />
       <div class="error errOldSecret">that doesn't seem to be the right secret</div>
       <input type="password" maxlength="32" id="txtNewSecret1" placeholder="new secret" />
       <div class="error errKnownSecret">oy vey! daily has seen that secret before. please choose a different one.</div>
-      <div class="error errNewSecret1">need at least 8 characters, some uppercase, and digits</div>
+      <div class="error errNewSecret1">need at least 8 characters, some uppercase, some digits</div>
       <input type="password" maxlength="32" id="txtNewSecret2" placeholder="new secret again" />
       <div class="error errNewSecret2">doesn't match field above</div>
-      <div class="save disabled">save</div>
-      <div class="cancel">cancel</div>
+      <div class="cancelsave save disabled">save</div>
+      <div class="cancelsave cancel">cancel</div>
+      <div class="progress"><i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i></div>
     </div>
     <div class="commands"><i class="fa fa-pencil"></i></div>
   </div>
@@ -39,8 +41,9 @@
       <div class="error errEmailExists">this email is already in use</div>
       <input type="password" maxlength="32" id="txtSecretForEmail" placeholder="your secret" />
       <div class="error errOldSecret">that doesn't seem to be the right secret</div>
-      <div class="save disabled">save</div>
-      <div class="cancel">cancel</div>
+      <div class="cancelsave save disabled">save</div>
+      <div class="cancelsave cancel">cancel</div>
+      <div class="progress"><i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i></div>
     </div>
     <div class="commands"><i class="fa fa-pencil"></i></div>
   </div>

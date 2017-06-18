@@ -25,3 +25,8 @@ CREATE TABLE users(
     email             VARCHAR(768) NOT NULL
 ) ENGINE=InnoDB CHARACTER SET=utf8 COLLATE utf8_general_ci;
 
+DROP TABLE IF EXISTS past_secrets;
+CREATE TABLE past_secrets(
+    hash       VARCHAR(256) NOT NULL,
+    salt       VARCHAR(256) NOT NULL
+) ENGINE=InnoDB CHARACTER SET=utf8 COLLATE utf8_general_ci;

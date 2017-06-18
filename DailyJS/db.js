@@ -1,8 +1,10 @@
 ﻿var config = require("./config.js");
+var crypt = require("./crypt.js");
 var mysql = require('mysql');
 var dateformat = require("./dateformat.js");
 
 var db = (function () {
+  "use strict";
 
   var _pool = mysql.createPool({
     host: config.dbhost,
@@ -249,16 +251,16 @@ var db = (function () {
   ";
 
   function splitDateInt(dateInt) {
-    year = Math.floor(dateInt / 10000);
-    month = Math.floor(dateInt / 100) - year * 100;
-    day = dateInt - year * 10000 - month * 100;
+    var year = Math.floor(dateInt / 10000);
+    var month = Math.floor(dateInt / 100) - year * 100;
+    var day = dateInt - year * 10000 - month * 100;
     return { year: year, month: month, day: day };
   }
 
   function selHistoryCurrentImages(ctxt) {
     return new Promise((resolve, reject) => {
       // Result must be here by now. Otherwise, nothing to do.
-      if (!ctxt.result) resolve(ctxt);
+      if (!ctxt.result) return resolve(ctxt);
       if (ctxt.city && ctxt.user) reject("Cannot filter by city and date at the same time");
       var loBound = ctxt.result.currentYear * 10000 + ctxt.result.currentMonth * 100;
       var hiBound = loBound + 100;
@@ -267,8 +269,8 @@ var db = (function () {
       if (ctxt.city) { query = _selMonthImagesCity; qparams.push(ctxt.city); }
       if (ctxt.user) { query = _selMonthImagesUser; qparams.push(ctxt.user); }
       ctxt.conn.query(query, qparams, (err, rows) => {
+        if (err) return reject(err);
         try {
-          if (err) return reject(err);
           ctxt.result.images = [];
           for (var i = 0; i != rows.length; ++i) {
             var row = rows[i];
@@ -309,8 +311,8 @@ var db = (function () {
           var activeMonths = {};
           for (var i = 0; i != rows.length; ++i) {
             var date = splitDateInt(rows[i].dateint);
-            if (date.year > maxYear) maxYear = year;
-            if (date.year < minYear) minYear = year;
+            if (date.year > maxYear) maxYear = date.year;
+            if (date.year < minYear) minYear = date.year;
             var xx = activeYears[date.year];
             if (!xx || date.month > xx) activeYears[date.year] = date.month;
             if (date.year == ctxt.currentYear) activeMonths[date.month] = 1;
@@ -364,6 +366,7 @@ var db = (function () {
         if (ctxt.city) { query = _selMaxDateIntCity; qparams.push(ctxt.city); }
         if (ctxt.user) { query = _selMaxDateIntUser; qparams.push(ctxt.user); }
         ctxt.conn.query(query, qparams, (err, rows) => {
+          if (err) return reject(err);
           try {
             if (rows.length != 1) return reject("Failed to get latest image timestamp");
             var date = splitDateInt(rows[0].max);
@@ -381,8 +384,9 @@ var db = (function () {
 
   function selHistoryCities(ctxt) {
     return new Promise((resolve, reject) => {
-      if (!ctxt.result) resolve(ctxt);
+      if (!ctxt.result) return resolve(ctxt);
       ctxt.conn.query(_selHistoryCities, (err, rows) => {
+        if (err) return reject(err);
         try {
           ctxt.result.cities = [];
           for (var i = 0; i != rows.length; ++i) {
@@ -399,8 +403,9 @@ var db = (function () {
 
   function selHistoryUsers(ctxt) {
     return new Promise((resolve, reject) => {
-      if (!ctxt.result) resolve(ctxt);
+      if (!ctxt.result) return resolve(ctxt);
       ctxt.conn.query(_selHistoryUsers, (err, rows) => {
+        if (err) return reject(err);
         try {
           ctxt.result.users = [];
           for (var i = 0; i != rows.length; ++i) {
@@ -417,7 +422,7 @@ var db = (function () {
 
   function getHistory(year, month, user, city) {
     return new Promise((resolve, reject) => {
-      ctxt = { year: year, month: month, user: user, city: city };
+      var ctxt = { year: year, month: month, user: user, city: city };
       getConn(ctxt)
         .then(selHistoryYearMonth)
         .then(selHistoryCalendar)
@@ -436,10 +441,16 @@ var db = (function () {
   }
 
   var _selUserProfile = "SELECT usrname, defcity, email FROM users WHERE id = ?;"
+  var _updDefCity = "UPDATE users SET defcity=? WHERE id=?;"
+  var _selOtherEmails = "SELECT COUNT(*) AS count FROM users WHERE id != ? AND email = ?;"
+  var _updEmail = "UPDATE users SET email=? WHERE id=?;"
+  var _selPastSecrets = "SELECT * FROM past_secrets;"
+  var _updSecret = "UPDATE users SET secret_hash=?, secret_salt=? WHERE id=?;"
 
   function selUserProfile(ctxt) {
     return new Promise((resolve, reject) => {
       ctxt.conn.query(_selUserProfile, [ctxt.userId], (err, rows) => {
+        if (err) return reject(err);
         try {
           if (rows.length != 1) return reject("Failed to retrieve user record");
           var row = rows[0];
@@ -459,9 +470,126 @@ var db = (function () {
 
   function getUserProfile(userId) {
     return new Promise((resolve, reject) => {
-      ctxt = { userId: userId };
+      var ctxt = { userId: userId };
       getConn(ctxt)
         .then(selUserProfile)
+        .then((ctxt) => {
+          if (ctxt.conn) { ctxt.conn.release(); ctxt.conn = null; }
+          resolve(ctxt.result);
+        })
+        .catch((err) => {
+          if (ctxt.conn) ctxt.conn.release();
+          return reject(ctxt);
+        });
+    });
+  }
+
+  function updDefCity(ctxt) {
+    return new Promise((resolve, reject) => {
+      ctxt.conn.query(_updDefCity, [ctxt.newDefCity, ctxt.userId], (err, rows) => {
+        if (err) return reject(err);
+        try {
+          ctxt.result = { error: null, newDefCity: ctxt.newDefCity };
+          resolve(ctxt);
+        }
+        catch (ex) {
+          return reject(ex);
+        }
+      });
+    });
+  }
+
+  function alwaysTrue(ctxt) {
+    return new Promise((resolve, reject) => {
+      resolve(ctxt);
+    });
+  }
+
+  function verifyUniqueEmail(ctxt) {
+    return new Promise((resolve, reject) => {
+      ctxt.conn.query(_selOtherEmails, [ctxt.userId, ctxt.newEmail], (err, rows) => {
+        if (err) return reject(err);
+        try {
+          if (rows.length != 1) return reject("Failed to retrieve count of identical emails");
+          if (rows[0].count != 0) ctxt.result.error = "knownemail";
+          resolve(ctxt);
+        }
+        catch (ex) {
+          return reject(ex);
+        }
+      });
+    });
+  }
+
+  function updEmail(ctxt) {
+    return new Promise((resolve, reject) => {
+      if (ctxt.result.error) return resolve(ctxt);
+      ctxt.conn.query(_updEmail, [ctxt.newEmail, ctxt.userId], (err, rows) => {
+        if (err) return reject(err);
+        try {
+          ctxt.result = { error: null, newEmail: ctxt.newEmail };
+          resolve(ctxt);
+        }
+        catch (ex) {
+          return reject(ex);
+        }
+      });
+    });
+  }
+
+  function verifyUniqueSecret(ctxt) {
+    return new Promise((resolve, reject) => {
+      ctxt.conn.query(_selPastSecrets, (err, rows) => {
+        if (err) return reject(err);
+        try {
+          // TO-DO: merged query. If secret is current, email user!
+          var seenBefore = false;
+          // DBG
+          if (ctxt.newSecret == "ABCD1234") seenBefore = true;
+          for (var i = 0; i != rows.length && !seenBefore; ++i) {
+            var row = rows[i];
+            if (crypt.isSameSecret(row.hash, row.salt, ctxt.newSecret)) seenBefore = true;
+          }
+          if (seenBefore) ctxt.result.error = "knownsecret";
+          resolve(ctxt);
+        }
+        catch (ex) {
+          return reject(ex);
+        }
+      });
+    });
+  }
+
+  function updSecret(ctxt) {
+    return new Promise((resolve, reject) => {
+      if (ctxt.result.error) return resolve(ctxt);
+      var x = crypt.getHashAndSalt(ctxt.newSecret);
+      ctxt.conn.query(_updSecret, [x.hash, x.salt, ctxt.userId], (err, rows) => {
+        if (err) return reject(err);
+        try {
+          ctxt.result = { error: null };
+          resolve(ctxt);
+        }
+        catch (ex) {
+          return reject(ex);
+        }
+      });
+    });
+  }
+
+  function changeUserProfile(ctxt) {
+    return new Promise((resolve, reject) => {
+      // If preceding verification step failed, nothing to do.
+      if (ctxt.result.error) return resolve(ctxt.result);
+      var verifyFun = alwaysTrue;
+      var changeFun = null;
+      if (ctxt.field == "defcity") changeFun = updDefCity;
+      else if (ctxt.field == "email") { verifyFun = verifyUniqueEmail; changeFun = updEmail; }
+      else if (ctxt.field == "secret") { verifyFun = verifyUniqueSecret; changeFun = updSecret; }
+      else throw new Error("Missing or wrong profile field to update.");
+      getConn(ctxt)
+        .then(verifyFun)
+        .then(changeFun)
         .then((ctxt) => {
           if (ctxt.conn) { ctxt.conn.release(); ctxt.conn = null; }
           resolve(ctxt.result);
@@ -478,7 +606,8 @@ var db = (function () {
     getImage: getImage,
     getAllUsers: getAllUsers,
     getHistory: getHistory,
-    getUserProfile: getUserProfile
+    getUserProfile: getUserProfile,
+    changeUserProfile: changeUserProfile
   };
 })();
 

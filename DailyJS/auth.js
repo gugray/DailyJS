@@ -93,10 +93,21 @@ var auth = (function () {
     });
   }
 
+  function verifyUserSecret(ctxt) {
+    // TO-DO: implement promise
+    return new Promise((resolve, reject) => {
+      if (ctxt.secret == "x") {
+        ctxt.result.error = "badsecret";
+      }
+      resolve(ctxt);
+    });
+  }
+
   return {
     sessionWare: sessionWare,
     login: login,
-    logout: logout
+    logout: logout,
+    verifyUserSecret: verifyUserSecret
   };
 
 })();

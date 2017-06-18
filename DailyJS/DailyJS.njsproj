@@ -34,6 +34,7 @@ NODE_ENV=development</Environment>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="config.js" />
+    <Compile Include="crypt.js" />
     <Compile Include="dateformat.js" />
     <Compile Include="db.js" />
     <Compile Include="public\dev-js\auth.js" />

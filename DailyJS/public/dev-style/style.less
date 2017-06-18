@@ -211,10 +211,12 @@ body {
 
 .in-narrow { width: 40rem; float: none; margin: 2rem auto; }
 .formRow {
-  font-size: 1.2rem;
-  //div, input { border: 1px solid #888; }
+  font-size: 1.2rem; min-height: 3rem;
   .label { width: 8rem; text-align: right; font-weight: bold; padding: 0.5rem 1rem 0 0; }
-  .field { width: 27rem; padding: 0.5rem; }
+  .field { 
+    width: 27rem; padding: 0.5rem; transition: background-color 1s ease;
+    &.blue { background-color: @clrBlue; transition: none; }
+  }
   .commands {
     width: 5rem; padding-top: 0.5rem; color: @clrTextFainter; height: 100%;
     &.hidden { display: none; }
@@ -227,7 +229,7 @@ body {
       display: none; padding-left: 0.5rem; font-size: 0.9rem; color: @clrAlert;
       &.visible { display: block; }
     }
-    .save, .cancel {
+    .save, .cancel, .progress {
       position: absolute; width: 4.5rem; right: 0.5rem; font-size: 1rem; cursor: default; text-align: center;
     }
     .save {
@@ -240,11 +242,13 @@ body {
       top: 2rem; color: @clrTextFaint;
       &:hover { color: @clrTextHover; }
     }
+    .progress { display: none; top: 0.5rem; text-align: right; &.visible { display: block; } i { font-size: 1rem; } }
+    .cancelsave.hidden { display: none; }
   }
   input {
     box-sizing: border-box;
     display: block; width: 27rem; margin: 0.5rem 0 0 0.5rem; text-align: left;
-    font-family: @fntBaseFamily; font-size: 1.3rem; background-color: @clrLighterBg; color: @clrText;
+    font-family: @fntBaseFamily; font-size: 1.2rem; background-color: @clrLighterBg; color: @clrText;
     &:focus { outline: none; -webkit-box-shadow: none; box-shadow: none; }
   }
   &.editing {

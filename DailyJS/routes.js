@@ -157,6 +157,52 @@ var routes = function (app) {
     else res.status(401).send("authentication needed");
   });
 
+  function verifySecretDummy(ctxt) {
+    return new Promise((resolve, reject) => {
+      resolve(ctxt);
+    });
+  }
+
+  app.post("/api/changeprofile", function (req, res) {
+    if (req.dailyUserName) {
+      var q = req.body;
+      var ctxt = {
+        result: {},
+        userId: req.dailyUserId,
+        field: q.field
+      };
+      var verifyFun = verifySecretDummy;
+      if (ctxt.field == "defcity") {
+        if (!q.newDefCity) { res.status(400).send("invalid request"); return; }
+        ctxt.newDefCity = q.newDefCity.trim();
+      }
+      else if (ctxt.field == "email") {
+        if (!q.secret) { res.status(400).send("invalid request"); return; }
+        if (!q.newEmail) { res.status(400).send("invalid request"); return; }
+        ctxt.secret = q.secret;
+        ctxt.newEmail = q.newEmail.trim().toLowerCase();
+        verifyFun = auth.verifyUserSecret;
+      }
+      else if (ctxt.field == "secret") {
+        if (!q.secret) { res.status(400).send("invalid request"); return; }
+        if (!q.newSecret) { res.status(400).send("invalid request"); return; }
+        ctxt.secret = q.secret;
+        ctxt.newSecret = q.newSecret;
+        verifyFun = auth.verifyUserSecret;
+      }
+      else { res.status(400).send("invalid request"); return; }
+      verifyFun(ctxt)
+        .then(db.changeUserProfile)
+        .then(
+          (result) => {
+            setTimeout(function () { res.send(result); }, 2000); 
+          },
+          (err) => { res.status(500).send("internal server error"); }
+        );
+    }
+    else res.status(401).send("authentication needed");
+  });
+
   // All other GET requests: we serve a juicy 404
   app.get('*', function (req, res) {
     res.status(404);

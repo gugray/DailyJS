@@ -220,7 +220,9 @@ App.auth = (function (path) {
 
     renderLogin: renderLogin,
 
-    controlLogin: controlLogin
+    controlLogin: controlLogin,
+
+    isValidEmail: isValidEmail
 
   };
 
