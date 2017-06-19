@@ -10,7 +10,7 @@ var app = express();
 app.use(auth.sessionWare);
 app.set("view engine", "ejs");
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({ limit: "4mb", extended: true }));
 app.use("/images", express.static(config.imageDir, { maxage: "365d" }));
 app.use("/uploads", express.static(config.uploadDir, { maxage: "365d" }));
 app.use(express.static("public", { maxage: "365d" }));
