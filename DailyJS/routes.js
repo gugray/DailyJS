@@ -227,9 +227,13 @@ var routes = function (app) {
   app.post("/api/uploadimage", function (req, res) {
     var myUuid = uuidv1();
     var form = new formidable.IncomingForm();
+    console.log("received: api/uploadimage");
     form.parse(req, function (err, fields, files) {
-      if (files.file.type != "image/jpeg")
+      console.log("parsed form");
+      if (files.file.type != "image/jpeg") {
+        console.log("invalid file type: " + files.file.type);
         return res.status(400).send("invalid request; only jpeg images accepted");
+      }
       var orig_name = files.file.name;
       var old_path = files.file.path;
       var file_size = files.file.size;
@@ -240,8 +244,11 @@ var routes = function (app) {
       var new_path = config.uploadDir + "/" + upload_name;
 
       fs.readFile(old_path, function (err, data) {
+        if (err) console.log("readFile failed: " + err);
         fs.writeFile(new_path, data, function (err) {
+          if (err) console.log("writeFile failed: " + err);
           fs.unlink(old_path, function (err) {
+            if (err) console.log("unlink failed: " + err);
             if (err) {
               res.status(500).send("internal server error");
             } else {
