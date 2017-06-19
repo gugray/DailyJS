@@ -227,6 +227,8 @@ var routes = function (app) {
   app.post("/api/uploadimage", function (req, res) {
     var myUuid = uuidv1();
     var form = new formidable.IncomingForm();
+    form.maxFieldSize = 4 * 1024 * 1024;
+    form.maxFields = 4 * 1024 * 1024;
     console.log("received: api/uploadimage");
     form.parse(req, function (err, fields, files) {
       console.log("parsed form");
