@@ -1,5 +1,6 @@
 .vs/
 _images/
+_uploads/
 DailyJS/package-lock.json
 DailyJS/node_modules/
 DailyJS/bin/

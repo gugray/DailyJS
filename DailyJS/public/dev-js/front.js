@@ -9,7 +9,7 @@ App.front = (function (path) {
   "use strict";
 
   var path = path;
-  var pathOnLogin = "/inside/history";
+  var pathOnLogin = "/inside/upload";
   enter();
 
   // Called when front first shown, or navigated to from back

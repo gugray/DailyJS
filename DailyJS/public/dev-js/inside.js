@@ -12,8 +12,12 @@ App.inside = (function () {
     renderSticker: function () {
       $(".stickerTop").html(zsnippets["sticker-all-inside"]);
       // Welcome message for current user
-      var helloHtml = "Hello, <span class='userName'>" + App.page.esc(App.auth.getUserName()) + "</span>!";
-      $(".sticker-inside .welcome").html(helloHtml)
+      var usrName = App.auth.getUserName();
+      if (usrName) {
+        usrName = App.page.esc(usrName);
+        var helloHtml = "Hello, <span class='userName'>" + usrName + "</span>!";
+        $(".sticker-inside .welcome").html(helloHtml)
+      }
       // Go to front event handler
       $(".sticker-inside .enter").click(function () {
         App.page.inPageNavigate("/");
@@ -24,7 +28,9 @@ App.inside = (function () {
         App.page.inPageNavigate("/");
       });
       // Where am I?
-      if (App.page.path().startsWith("/inside/history"))
+      if (App.page.path().startsWith("/inside/upload"))
+        $(".menu-item.menuUpload").addClass("selected");
+      else if (App.page.path().startsWith("/inside/history"))
         $(".menu-item.menuHistory").addClass("selected");
       else if (App.page.path().startsWith("/inside/profile"))
         $(".menu-item.menuProfile").addClass("selected");

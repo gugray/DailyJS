@@ -213,6 +213,10 @@ body {
 .formRow {
   font-size: 1.2rem; min-height: 3rem;
   .label { width: 8rem; text-align: right; font-weight: bold; padding: 0.5rem 1rem 0 0; }
+  .full-right {
+    width: 32rem;
+    input { padding: 0.2rem 0.5rem 0.3rem 0.5rem; margin: 0.3rem 0 0 0; width: 32rem; }
+  }
   .field { 
     width: 27rem; padding: 0.5rem; transition: background-color 1s ease;
     &.blue { background-color: @clrBlue; transition: none; }
@@ -259,5 +263,61 @@ body {
   &:hover { 
     .commands i { color: @clrText; }
     .commands i:hover { color: @clrBlue; }
+  }
+  .btnGoToPreview {
+    margin-top: 2rem; height: 1.8rem; border-radius: 1.8rem; background-color: @clrText; color: @clrBg;
+    text-align: center; font-size: 1.1rem; cursor: default;
+    &:hover { background-color: @clrBlue; }
+    &.disabled, &.disabled:hover { background-color: @clrTextFaint; }
+  }
+}
+
+.in-narrow.upload input,
+.formRow .upload-widget,
+.formRow.empty .day { 
+  transition: background-color 1.5s ease;
+}
+
+.formRow.failed {
+  input { background-color: @clrAlert; transition: none; }
+  .date-widget .day { background-color: @clrAlert; transition: none; }
+  .upload-widget { background-color: @clrAlert; transition: none; }
+}
+
+.date-widget {
+  margin-top: 0.5rem; height: 4.2rem; cursor: default;
+  .day {
+    width: 3.5rem; height: 3.5rem; margin-left: 0.571rem; padding-top: 0.3rem;
+    font-size: 1rem; text-align: center; background-color: @clrRegionBg;
+    &:first-child { margin-left: 0; }
+    &:hover { background-color: @clrTextFaint; }
+    &.disabled {
+      color: @clrTextFaint; background-color: @clrRegionBg;
+      &:hover { background-color: @clrRegionBg; }
+    }
+    &.selected {
+      color: @clrBg; background-color: @clrText;
+      &:hover { background-color: @clrText; }
+    }
+  }
+}
+
+.upload-widget {
+  background-color: @clrLighterBg; margin-top: 0.5rem; height: 4rem; cursor: default;
+  img { display: block; position: absolute; right: 0; height: 4rem; z-index: 2; }
+  .uploadHot {
+    text-align: center; font-weight: bold; color: @clrTextFaint; font-size: 0.9rem;
+    padding-top: 0.7rem; padding-right: 7rem; height: 4rem;
+    transition: background-color 0.5s ease, color 0.5s ease;
+    &:hover { background-color:@clrTextFaint; color: @clrRegionBg; }
+  }
+  .progress {
+    position: absolute; top: 0; width: 0; height: 0.2rem; z-index: 3;
+    background-color: @clrBlue;
+  }
+  .processing {
+    position: absolute; top: 0.2rem; right: 0.3rem; width: auto; z-index: 2;
+    display: none; &.visible { display: block; }
+    i { font-size: 1rem; }
   }
 }

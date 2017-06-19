@@ -601,13 +601,90 @@ var db = (function () {
     });
   }
 
+  var _selDefCity = "SELECT defcity FROM users WHERE id=?;";
+  var _selBusySlots = "SELECT dateint FROM images WHERE (city=? OR user_id = ?) AND (dateint >= ? AND dateint <= ?);";
+
+  function selCityIfNeeded(ctxt) {
+    return new Promise((resolve, reject) => {
+      if (ctxt.city) return resolve(ctxt);
+      ctxt.conn.query(_selDefCity, [ctxt.userId], (err, rows) => {
+        if (err) return reject(err);
+        try {
+          if (rows.length != 1) throw new Error("Failed to retrieve default city.");
+          ctxt.city = rows[0].defcity;
+          resolve(ctxt);
+        }
+        catch (ex) {
+          return reject(ex);
+        }
+      });
+    });
+  }
+
+  function selUploadSlots(ctxt) {
+    return new Promise((resolve, reject) => {
+      ctxt.dates = [];
+      for (var i = 7; i >= 0; --i) {
+        var d = new Date();
+        d.setDate(d.getDate() - i);
+        ctxt.dates.push({
+          dateint: dateformat.dateToInt(d),
+          month: d.getMonth() + 1,
+          dayOfMonth: d.getDate(),
+          dayStr: dateformat.getDayStr(d),
+          free: true
+        });
+      }
+      var qparams = [ctxt.city, ctxt.userId, ctxt.dates[0].dateint, ctxt.dates[ctxt.dates.length - 1].dateint];
+      ctxt.conn.query(_selBusySlots, qparams, (err, rows) => {
+        if (err) return reject(err);
+        try {
+          for (var i = 0; i != rows.length; ++i) {
+            var di = rows[i].dateint;
+            for (var j = 0; j != ctxt.dates.length; ++j) {
+              if (ctxt.dates[j].dateint == di) ctxt.dates[j].free = false;
+            }
+          }
+          resolve(ctxt);
+        }
+        catch (ex) {
+          return reject(ex);
+        }
+      });
+    });
+  }
+
+  function getUploadSlots(userId, city) {
+    return new Promise((resolve, reject) => {
+      var ctxt = {};
+      ctxt.userId = userId;
+      ctxt.city = city;
+      getConn(ctxt)
+        .then(selCityIfNeeded)
+        .then(selUploadSlots)
+        .then((ctxt) => {
+          if (ctxt.conn) { ctxt.conn.release(); ctxt.conn = null; }
+          var result = {
+            city: ctxt.city,
+            dates: ctxt.dates
+          };
+          resolve(result);
+        })
+        .catch((err) => {
+          if (ctxt.conn) ctxt.conn.release();
+          return reject(ctxt);
+        });
+    });
+  }
+
   return {
     getLatestImage: getLatestImage,
     getImage: getImage,
     getAllUsers: getAllUsers,
     getHistory: getHistory,
     getUserProfile: getUserProfile,
-    changeUserProfile: changeUserProfile
+    changeUserProfile: changeUserProfile,
+    getUploadSlots: getUploadSlots
   };
 })();
 

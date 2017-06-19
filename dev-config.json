@@ -6,5 +6,6 @@
   "dbpass": "",
   "dbname": "daily_js",
   "dbconnlimit": 5,
-  "sessionTimeoutSec": 600
+  "sessionTimeoutSec": 600,
+  "uploadDir": "../_uploads"
 }

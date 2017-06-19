@@ -5,7 +5,7 @@
 
 var App = App || {};
 
-App.profile = (function (path) {
+App.profile = (function () {
   "use strict";
 
   enter();
@@ -17,7 +17,6 @@ App.profile = (function (path) {
 
   // Called when navigating around within front
   function move(newPath) {
-    path = newPath;
     fetchData(false);
   }
 
@@ -292,6 +291,6 @@ App.page.registerPage({
     return false;
   },
   getController: function (path) {
-    return App.profile(path);
+    return App.profile();
   }
 });

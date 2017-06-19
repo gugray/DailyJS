@@ -1,7 +1,11 @@
-﻿//var request = require('request');
+﻿//var request = require("request");
+var formidable = require("formidable");
+var fs = require("fs");
+var uuidv1 = require("uuid/v1");
 var db = require("./db.js");
 var auth = require("./auth.js");
-var pjson = require('./package.json');
+var config = require("./config.js");
+var pjson = require("./package.json");
 
 var routes = function (app) {
 
@@ -55,7 +59,7 @@ var routes = function (app) {
   });
 
   // Known pages that are only rendered app-side
-  app.get('(/inside/history|/inside/history/*|/inside/profile)', function (req, res) {
+  app.get('(/inside/history|/inside/history/*|/inside/profile|/inside/upload)', function (req, res) {
     res.render(__dirname + "/index.ejs", {
       prod: process.env.NODE_ENV == "production",
       ver: pjson.version,
@@ -174,7 +178,7 @@ var routes = function (app) {
       var verifyFun = verifySecretDummy;
       if (ctxt.field == "defcity") {
         if (!q.newDefCity) { res.status(400).send("invalid request"); return; }
-        ctxt.newDefCity = q.newDefCity.trim();
+        ctxt.newDefCity = q.newDefCity.trim().toLowerCase();
       }
       else if (ctxt.field == "email") {
         if (!q.secret) { res.status(400).send("invalid request"); return; }
@@ -195,12 +199,58 @@ var routes = function (app) {
         .then(db.changeUserProfile)
         .then(
           (result) => {
-            setTimeout(function () { res.send(result); }, 2000); 
+            setTimeout(function () { res.send(result); }, 1000); 
           },
           (err) => { res.status(500).send("internal server error"); }
         );
     }
     else res.status(401).send("authentication needed");
+  });
+
+  app.get("/api/getuploadslots", function (req, res) {
+    if (req.dailyUserName) {
+      var q = req.query;
+      var qCity = q.city ? decodeURIComponent(q.city).trim().toLowerCase() : null;
+      db.getUploadSlots(req.dailyUserId, qCity).then(
+        (result) => {
+          if (!result) res.status(400).send("invalid request");
+          else res.send(result);
+        },
+        (err) => {
+          res.status(500).send("internal server error");
+        }
+      );
+    }
+    else res.status(401).send("authentication needed");
+  });
+
+  app.post("/api/uploadimage", function (req, res) {
+    var myUuid = uuidv1();
+    var form = new formidable.IncomingForm();
+    form.parse(req, function (err, fields, files) {
+      if (files.file.type != "image/jpeg")
+        return res.status(400).send("invalid request; only jpeg images accepted");
+      var orig_name = files.file.name;
+      var old_path = files.file.path;
+      var file_size = files.file.size;
+      var file_ext = files.file.name.split('.').pop();
+      var index = old_path.lastIndexOf('/') + 1;
+      var file_name = old_path.substr(index);
+      var upload_name = myUuid + ".jpg";
+      var new_path = config.uploadDir + "/" + upload_name;
+
+      fs.readFile(old_path, function (err, data) {
+        fs.writeFile(new_path, data, function (err) {
+          fs.unlink(old_path, function (err) {
+            if (err) {
+              res.status(500).send("internal server error");
+            } else {
+              res.send({ upload_name: upload_name });
+            }
+          });
+        });
+      });
+    });
   });
 
   // All other GET requests: we serve a juicy 404
