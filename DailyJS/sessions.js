@@ -52,6 +52,12 @@ var sessions = (function () {
     next();
   }
 
+  function isLoggedIn(token) {
+    var s = getSession(token);
+    if (s == null) return false;
+    return true;
+  }
+
   function loginUserBySecret(users, secret, prevToken) {
     var user = null;
     for (var i = 0; i != users.length; ++i) {
@@ -107,7 +113,8 @@ var sessions = (function () {
     sessionWare: sessionWare,
     login: login,
     logout: logout,
-    verifyUserSecret: verifyUserSecret
+    verifyUserSecret: verifyUserSecret,
+    isLoggedIn: isLoggedIn
   };
 
 })();

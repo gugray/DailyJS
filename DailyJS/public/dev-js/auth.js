@@ -218,6 +218,12 @@ App.auth = (function (path) {
 
     logout: doLogout,
 
+    getToken: function () {
+      var token = localStorage.getItem("token");
+      if (token) return token;
+      else return null;
+    },
+
     renderLogin: renderLogin,
 
     controlLogin: controlLogin,

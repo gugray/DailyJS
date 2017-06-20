@@ -62,6 +62,8 @@ App.upload = (function () {
       $(".image-upload-info").html("");
       var formData = new FormData();
       formData.append('file', $(this)[0].files[0]);
+      var token = App.auth.getToken();
+      if (token) formData.append("token", token);
       $.ajax({
         url: '/api/uploadimage',
         type: 'POST',
@@ -87,7 +89,8 @@ App.upload = (function () {
     }
   }
 
-  function uploadFail() {
+  function uploadFail(xhr) {
+    if (xhr.status == 401) App.auth.renderLogin();
     $(".upload-widget .processing").removeClass("visible");
     $(".upload-widget .progress").css("width", "0");
     $(".formRow.image").addClass("failed");

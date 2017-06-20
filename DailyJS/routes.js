@@ -226,6 +226,7 @@ var routes = function (app) {
   });
 
   app.post("/api/uploadimage", function (req, res) {
+    var usr = req.dailyUserName;
     var myUuid = uuidv1();
     var form = new formidable.IncomingForm();
     form.maxFieldSize = 4 * 1024 * 1024;
@@ -233,6 +234,9 @@ var routes = function (app) {
     form.parse(req, function (err, fields, files) {
       if (files.file.type != "image/jpeg") {
         return res.status(400).send("invalid request; only jpeg images accepted");
+      }
+      if (!fields["token"] || !sessions.isLoggedIn(fields["token"])) {
+        return res.status(401).send("authentication needed");
       }
       var orig_name = files.file.name;
       var old_path = files.file.path;
