@@ -81,7 +81,7 @@ var image = (function () {
               });
             }
             else {
-              copyFile(fnSource, fnLarge, function (err) {
+              copyFile(fnOrig, fnLarge, function (err) {
                 if (err) return reject(err);
                 else resolve(resul);
               });
