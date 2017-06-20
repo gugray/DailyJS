@@ -2,7 +2,7 @@
 var crypto = require("crypto");
 var db = require("./db.js");
 
-var auth = (function () {
+var sessions = (function () {
 
   // TO-DO:
   // - Periodic cleanup of expired sessions
@@ -112,4 +112,4 @@ var auth = (function () {
 
 })();
 
-module.exports = auth;
+module.exports = sessions;

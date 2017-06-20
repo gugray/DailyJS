@@ -3,8 +3,9 @@ var formidable = require("formidable");
 var fs = require("fs");
 var uuidv1 = require("uuid/v1");
 var db = require("./db.js");
-var auth = require("./auth.js");
+var sessions = require("./sessions.js");
 var config = require("./config.js");
+var image = require("./image.js");
 var pjson = require("./package.json");
 
 var routes = function (app) {
@@ -98,7 +99,7 @@ var routes = function (app) {
 
   app.post("/api/login", function (req, res) {
     if (req.body.secret) {
-      auth.login(req.body.secret, req.body.prevToken).then(
+      sessions.login(req.body.secret, req.body.prevToken).then(
         (result) => {
           if (result) res.send({ token: result.token, user: result.user });
           else res.status(401).send("wrong secret");
@@ -113,7 +114,7 @@ var routes = function (app) {
 
   app.post("/api/logout", function (req, res) {
     if (req.dailyToken) {
-      auth.logout(req.dailyToken).then(
+      sessions.logout(req.dailyToken).then(
         (result) => {
           if (result) res.send("bye");
           else res.status(401).send("invalid token");
@@ -185,14 +186,14 @@ var routes = function (app) {
         if (!q.newEmail) { res.status(400).send("invalid request"); return; }
         ctxt.secret = q.secret;
         ctxt.newEmail = q.newEmail.trim().toLowerCase();
-        verifyFun = auth.verifyUserSecret;
+        verifyFun = sessions.verifyUserSecret;
       }
       else if (ctxt.field == "secret") {
         if (!q.secret) { res.status(400).send("invalid request"); return; }
         if (!q.newSecret) { res.status(400).send("invalid request"); return; }
         ctxt.secret = q.secret;
         ctxt.newSecret = q.newSecret;
-        verifyFun = auth.verifyUserSecret;
+        verifyFun = sessions.verifyUserSecret;
       }
       else { res.status(400).send("invalid request"); return; }
       verifyFun(ctxt)
@@ -229,11 +230,8 @@ var routes = function (app) {
     var form = new formidable.IncomingForm();
     form.maxFieldSize = 4 * 1024 * 1024;
     form.maxFields = 4 * 1024 * 1024;
-    console.log("received: api/uploadimage");
     form.parse(req, function (err, fields, files) {
-      console.log("parsed form");
       if (files.file.type != "image/jpeg") {
-        console.log("invalid file type: " + files.file.type);
         return res.status(400).send("invalid request; only jpeg images accepted");
       }
       var orig_name = files.file.name;
@@ -246,15 +244,12 @@ var routes = function (app) {
       var new_path = config.uploadDir + "/" + upload_name;
 
       fs.readFile(old_path, function (err, data) {
-        if (err) console.log("readFile failed: " + err);
         fs.writeFile(new_path, data, function (err) {
-          if (err) console.log("writeFile failed: " + err);
           fs.unlink(old_path, function (err) {
-            if (err) console.log("unlink failed: " + err);
             if (err) {
               res.status(500).send("internal server error");
             } else {
-              res.send({ upload_name: upload_name });
+              res.send({ guid: myUuid, size: file_size });
             }
           });
         });
@@ -262,11 +257,26 @@ var routes = function (app) {
     });
   });
 
+  app.post("/api/processimage", function (req, res) {
+    if (!req.dailyUserName) return res.status(401).send("authentication needed");
+    if (!req.body.guid) return res.status(400).send("invalid request");
+    image.processImage(req.body.guid).then(
+      (result) => {
+        res.send(result);
+      },
+      (err) => {
+        res.status(500).send("internal server error");
+      }
+    );
+  });
+
+
   // All other GET requests: we serve a juicy 404
   app.get('*', function (req, res) {
     res.status(404);
     res.render(__dirname + "/index.ejs", {
       prod: process.env.NODE_ENV == "production",
+      ver: pjson.version,
       img: null,
       pageNotFound: true
     });

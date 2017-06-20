@@ -9,16 +9,19 @@ App.upload = (function () {
   "use strict";
 
   var slotReqId = 0;
+  var state = null;
 
   enter();
 
   // Called when front first shown, or navigated to from back
   function enter() {
+    state = null;
     fetchData(true);
   }
 
   // Called when navigating around within front
   function move(newPath) {
+    state = null;
     fetchData(false);
   }
 
@@ -27,6 +30,7 @@ App.upload = (function () {
     var req = App.auth.ajax("/api/getuploadslots", "GET");
     req.done(function (data) {
       if (slotReqId != reqId) return;
+      state = {};
       if (fullRender) App.inside.renderSticker();
       renderInner(data);
     });
@@ -55,6 +59,7 @@ App.upload = (function () {
     fileSelector.click();
     fileSelector.change(function () {
       $(".upload-widget img").attr("src", "");
+      $(".image-upload-info").html("");
       var formData = new FormData();
       formData.append('file', $(this)[0].files[0]);
       $.ajax({
@@ -83,17 +88,42 @@ App.upload = (function () {
   }
 
   function uploadFail() {
+    $(".upload-widget .processing").removeClass("visible");
     $(".upload-widget .progress").css("width", "0");
     $(".formRow.image").addClass("failed");
     setTimeout(function () {
       $(".formRow.image").removeClass("failed");
     }, 100);
+    if (state.imgGuid) delete state.imgGuid;
+    if (state.imgOrigBytes) delete state.imgOrigBytes;
   }
 
   function uploadSuccess(data) {
-    $(".upload-widget .progress").css("width", "0");
-    $(".upload-widget img").attr("src", "/uploads/" + data.upload_name);
-    $(".uploadHot").html("want a different picture?<br/>just upload again the same way");
+    state.imgGuid = data.guid;
+    state.imgOrigBytes = data.size;
+    var origBytesFmt = "" + Math.floor(state.imgOrigBytes / 1024);
+    $(".upload-widget .processing").addClass("visible");
+
+    var req = App.auth.ajax("/api/processimage", "POST", { guid: data.guid });
+    req.done(function (data) {
+      state.origw = data.origw;
+      state.origh = data.origh;
+      state.finalw = data.finalw;
+      state.finalh = data.finalh;
+      $(".upload-widget .processing").removeClass("visible");
+      $(".upload-widget .progress").css("width", "0");
+      $(".upload-widget img").attr("src", "/uploads/" + state.imgGuid + "-md.jpg");
+      $(".uploadHot").html("want a different picture?<br/>just upload again the same way");
+      var imgInfo = origBytesFmt + "KB, " + state.origw + " x " + state.origh;
+      if (state.finalw != state.origw) {
+        imgInfo += "\nresized to " + state.finalw + " x " + state.finalh;
+      }
+      $(".image-upload-info").html(imgInfo);
+    });
+    req.fail(function (jqXHR, textStatus, error) {
+      if (jqXHR.status == 401) App.auth.renderLogin();
+      else uploadFail();
+    });
   }
 
   function onGoToPreview() {

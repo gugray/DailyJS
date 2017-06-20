@@ -3,11 +3,11 @@ var config = require("./config.js");
 var express = require("express");
 var bodyParser = require("body-parser");
 var db = require("./db.js");
-var auth = require("./auth.js");
+var sessions = require("./sessions.js");
 
 // Set up server
 var app = express();
-app.use(auth.sessionWare);
+app.use(sessions.sessionWare);
 app.set("view engine", "ejs");
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
