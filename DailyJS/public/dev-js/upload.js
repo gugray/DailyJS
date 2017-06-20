@@ -52,34 +52,61 @@ App.upload = (function () {
     $("#txtCity").focus().val($("#txtCity").val()); // This puts caret at end of text
     $(".btnGoToPreview").click(onGoToPreview);
     $(".uploadHot").click(onUploadClicked);
+    $(".uploadHot").on("drop", function (event) {
+      $(".uploadHot").removeClass("dragging");
+      if (event.originalEvent.dataTransfer && event.originalEvent.dataTransfer.files.length) {
+        event.preventDefault();
+        event.stopPropagation();
+        doUpload(event.originalEvent.dataTransfer.files[0]);
+      }
+    });
+    $(".uploadHot").on("dragover", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      $(".uploadHot").addClass("dragging");
+    });
+    $(".uploadHot").on("dragenter", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      $(".uploadHot").addClass("dragging");
+    });
+    $(".uploadHot").on("dragleave", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      $(".uploadHot").removeClass("dragging");
+    });
   }
 
   function onUploadClicked() {
     var fileSelector = $('<input type="file" accept=".jpg,.jpeg"></input>');
     fileSelector.click();
     fileSelector.change(function () {
-      $(".upload-widget img").attr("src", "");
-      $(".image-upload-info").html("");
-      var formData = new FormData();
-      formData.append('file', $(this)[0].files[0]);
-      var token = App.auth.getToken();
-      if (token) formData.append("token", token);
-      $.ajax({
-        url: '/api/uploadimage',
-        type: 'POST',
-        data: formData,
-        cache: false,
-        contentType: false,
-        processData: false,
-        xhr: function () {
-          var myXhr = $.ajaxSettings.xhr();
-          if (myXhr.upload) myXhr.upload.addEventListener('progress', uploadProgress, false);
-          return myXhr;
-        },
-        success: uploadSuccess,
-        error: uploadFail
-      }, 'json');
+      doUpload($(this)[0].files[0]);
     });
+  }
+
+  function doUpload(file) {
+    $(".upload-widget img").attr("src", "");
+    $(".image-upload-info").html("");
+    var formData = new FormData();
+    formData.append('file', file);
+    var token = App.auth.getToken();
+    if (token) formData.append("token", token);
+    $.ajax({
+      url: '/api/uploadimage',
+      type: 'POST',
+      data: formData,
+      cache: false,
+      contentType: false,
+      processData: false,
+      xhr: function () {
+        var myXhr = $.ajaxSettings.xhr();
+        if (myXhr.upload) myXhr.upload.addEventListener('progress', uploadProgress, false);
+        return myXhr;
+      },
+      success: uploadSuccess,
+      error: uploadFail
+    }, 'json');
   }
 
   function uploadProgress(e) {

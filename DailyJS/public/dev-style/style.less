@@ -312,7 +312,8 @@ body {
     text-align: center; font-weight: bold; color: @clrTextFaint; font-size: 0.9rem;
     padding-top: 0.7rem; padding-right: 7rem; height: 4rem;
     transition: background-color 0.5s ease, color 0.5s ease;
-    &:hover { background-color:@clrTextFaint; color: @clrRegionBg; }
+    &:hover, &.dragging { background-color:@clrTextFaint; color: @clrRegionBg; }
+    &.dragging { cursor: grab; }
   }
   .progress {
     position: absolute; top: 0; width: 0; height: 0.2rem; z-index: 3;
