@@ -83,7 +83,7 @@ var image = (function () {
             else {
               copyFile(fnOrig, fnLarge, function (err) {
                 if (err) return reject(err);
-                else resolve(resul);
+                else resolve(result);
               });
             }
           });
