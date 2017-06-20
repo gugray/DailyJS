@@ -171,8 +171,34 @@ App.upload = (function () {
       }, 100);
       return;
     }
-    // OK, checks out: request preview
+    // OK, checks out: show preview
+    state.title = $("#txtTitle").val();
+    state.city = $("#txtCity").val().trim().toLowerCase();
+    state.dateint = $(".day.selected").data("dateint");
+    state.dateStr = $(".day.selected").data("datestr");
+    var elmSticker = $(zsnippets["sticker-front"]);
+    elmSticker.find(".photoTitle").text(state.title);
+    elmSticker.find(".photoMeta .date").text(state.dateStr);
+    elmSticker.find(".photoMeta .city").text(state.city);
+    elmSticker.find(".photoMeta .poster").text(App.auth.getUserName());
+    elmSticker.find(".menu").html('<span class="accept"><i class="fa fa-check"></i></span><span class="reject"><i class="fa fa-times"></i></span>');
+    $(".stickerTop").html("");
+    $(".stickerTop").append(elmSticker);
+    $(".content-inner").html("<div class='image-holder'>&nbsp;</div>");
+    $(".image-holder").css("background-image", "url('/uploads/" + state.imgGuid + "-lg.jpg')");
+    // Next steps
+    $(".stickerFront .menu .accept").click(onPublishPreview);
+    $(".stickerFront .menu .reject").click(onRejectPreview);
+  }
+
+  function onPublishPreview() {
     // TO-DO
+    enter();
+  }
+
+  function onRejectPreview() {
+    // TO-DO
+    enter();
   }
 
   function onCityChanged() {
@@ -183,6 +209,7 @@ App.upload = (function () {
       $(".formRow.date").addClass("empty")
       return;
     }
+    $(".formRow.date").removeClass("empty")
     var reqId = ++slotReqId;
     var req = App.auth.ajax("/api/getuploadslots", "GET", { city: city });
     req.done(function (data) {
@@ -211,12 +238,20 @@ App.upload = (function () {
       html += "<div class='day";
       if (!itm.free) html += " disabled";
       if (i == selIx) html += " selected";
-      html += "' data-dateint='" + itm.dateint + "'>";
+      html += "' data-dateint='" + itm.dateint + "'";
+      html += " data-datestr='" + itm.dateStr + "'>";
       html += itm.month + "/" + itm.dayOfMonth + "<br/>" + itm.dayStr;
       html += "</div>";
     }
     $(".date-widget").html(html);
     if (selIx == -1) $(".formRow.date").addClass("empty");
+    else $(".formRow.date").removeClass("empty");
+    $(".date-widget .day").click(function () {
+      if ($(".formRow.date").hasClass("empty")) return;
+      if ($(this).hasClass("disabled")) return;
+      $(".date-widget .day").removeClass("selected");
+      $(this).addClass("selected");
+    });
   }
 
   function renderOops() {

@@ -41,6 +41,8 @@ body {
       cursor: default;
       &:hover { color: @clrTextHover; }
       &.disabled { visibility: hidden; }
+      &.accept { color: @clrBlue; &:hover { color: lighten(@clrBlue, 10%); } }
+      &.reject { color: @clrAlert; &:hover { color: lighten(@clrAlert, 10%); }}
     }
   }
   .loginPanel {

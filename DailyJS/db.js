@@ -629,6 +629,7 @@ var db = (function () {
         d.setDate(d.getDate() - i);
         ctxt.dates.push({
           dateint: dateformat.dateToInt(d),
+          dateStr: dateformat.intToDate(dateformat.dateToInt(d)),
           month: d.getMonth() + 1,
           dayOfMonth: d.getDate(),
           dayStr: dateformat.getDayStr(d),
