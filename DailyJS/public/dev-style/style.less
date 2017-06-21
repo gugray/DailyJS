@@ -22,6 +22,8 @@ body {
   box-sizing: border-box; padding: 1rem 1.5rem 0.5rem 1.5rem;
   background-color: @clrBg; color: @clrText;
 }
+i.fa { cursor: default; }
+input::-ms-clear { display: none; width: 0; height: 0; }
 .plank { height: 100%; overflow: hidden; }
 .centrerBottom { bottom: 0; position: absolute; width: 100%; }
 .stickerBottom {
@@ -239,6 +241,7 @@ body {
     }
     .save, .cancel, .progress {
       position: absolute; width: 4.5rem; right: 0.5rem; font-size: 1rem; cursor: default; text-align: center;
+      overflow: hidden;
     }
     .save {
       top: 0.5rem; height: 1.5rem; border-radius: 1.5rem; background-color: @clrText; color: @clrBg;
@@ -318,6 +321,8 @@ body {
     transition: background-color 0.5s ease, color 0.5s ease;
     &:hover, &.dragging { background-color:@clrTextFaint; color: @clrRegionBg; }
     &.dragging { cursor: grab; }
+    input { position: absolute; width: 100%; height: 100%; opacity: 0; margin: 0; box-sizing: border-box; }
+    overflow: hidden;
   }
   .progress {
     position: absolute; top: 0; width: 0; height: 0.2rem; z-index: 3;
@@ -325,6 +330,7 @@ body {
   }
   .processing {
     position: absolute; top: 0.2rem; right: 0.3rem; width: auto; z-index: 2;
+    overflow: hidden;
     display: none; &.visible { display: block; }
     i { font-size: 1rem; }
   }

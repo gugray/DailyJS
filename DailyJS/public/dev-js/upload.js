@@ -53,7 +53,11 @@ App.upload = (function () {
     $("#txtCity").focus().val($("#txtCity").val()); // This puts caret at end of text
     $(".btnGoToPreview").click(onGoToPreview);
     if (state && state.imgGuid) showImageFromState();
-    $(".uploadHot").click(onUploadClicked);
+    //$(".uploadHot").click(onUploadClicked);
+    // IE!!!
+    $("#fupload").change(function () {
+      doUpload($(this)[0].files[0]);
+    });
     $(".uploadHot").on("drop", function (event) {
       $(".uploadHot").removeClass("dragging");
       if (event.originalEvent.dataTransfer && event.originalEvent.dataTransfer.files.length) {
@@ -76,14 +80,6 @@ App.upload = (function () {
       e.preventDefault();
       e.stopPropagation();
       $(".uploadHot").removeClass("dragging");
-    });
-  }
-
-  function onUploadClicked() {
-    var fileSelector = $('<input type="file" accept=".jpg,.jpeg" hidden="true"></input>');
-    fileSelector.click();
-    fileSelector.change(function () {
-      doUpload($(this)[0].files[0]);
     });
   }
 
