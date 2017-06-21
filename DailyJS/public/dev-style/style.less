@@ -69,13 +69,20 @@ body {
     width: 100%; height: 100%;
     top: 50%; transform: translateY(-50%);
   }
+  .hilite { color: @clrAlert; }
   .image-holder { 
     position: absolute; height: 100%;
     background-size: contain; background-repeat: no-repeat; background-position: center center;
   }
+  .content-login {
+    width: 20.5rem; float: none; margin: 4rem auto 0 auto; text-align: center;
+    p { text-align: center; margin-bottom: 0.5rem; }
+    .loginPanel { width: 20.5rem; position: relative; float: left; }
+  }
   .content-badpage {
-    height: 100%; text-align: center;
+    width: 20.5rem; float: none; margin: 4rem auto 0 auto; text-align: center;
     a { color: @clrTextFaint; text-decoration: none; &:hover { color: @clrTextHover; } }
+    p.main { font-size: 1.1rem; margin-bottom: 0.5rem; }
   }
 }
 
@@ -114,12 +121,6 @@ body {
   .close { text-align: right; display: block; }
   span { color: @clrText; cursor: default; &:hover { color: @clrTextHover; } }
   b { color: @clrAlert; }
-}
-
-.content-login {
-  width: 20.5rem; float: none; margin: 0 auto;
-  p { text-align: center; margin-bottom: 0.5rem; }
-  .loginPanel { width: 20.5rem; position: relative; float: left; }
 }
 
 .sticker-inside {

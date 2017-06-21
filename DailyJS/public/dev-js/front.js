@@ -72,10 +72,16 @@ App.front = (function (path) {
         $(".photoMeta .poster").text(data.user);
         $(".menu .back").attr("href", "/past/" + data.prev_dateint + "/" + data.prev_city);
         $(".menu .back").removeClass("disabled");
-        $(".menu .forward").addClass("disabled");
+        if (data.next_dateint) {
+          $(".menu .forward").attr("href", "/past/" + data.next_dateint + "/" + data.next_city);
+          $(".menu .forward").removeClass("disabled");
+        }
+        else {
+          $(".menu .forward").addClass("disabled");
+        }
         var tmpImg = new Image();
         tmpImg.onload = function () { $(".image-holder").css("background-image", "url('" + data.img_url + "')"); };
-        tmpImg.onerror = function () { App.page.show404(); };
+        tmpImg.onerror = function () { $(".image-holder").css("background-image", ""); };
         tmpImg.src = data.img_url;
       });
       req.fail(function (jqXHR, textStatus, error) {
@@ -88,7 +94,6 @@ App.front = (function (path) {
       var parts = spec.split('/');
       var req = App.auth.ajax("/api/getimage", "GET", { date: parts[0], city: decodeURIComponent(parts[1]) });
       req.done(function (data) {
-        //$(".image-holder").css("background-image", "url('" + data.img_url + "')");
         $(".photoTitle").text(data.title);
         $(".photoMeta .date").text(data.dateStr);
         $(".photoMeta .city").text(data.city);
@@ -109,7 +114,7 @@ App.front = (function (path) {
         }
         var tmpImg = new Image();
         tmpImg.onload = function () { $(".image-holder").css("background-image", "url('" + data.img_url + "')"); };
-        tmpImg.onerror = function () { App.page.show404(); };
+        tmpImg.onerror = function () { $(".image-holder").css("background-image", ""); };
         tmpImg.src = data.img_url;
       });
       req.fail(function (jqXHR, textStatus, error) {

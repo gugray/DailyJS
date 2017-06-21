@@ -1,5 +1,5 @@
-﻿var fs = require("fs");
-var config = require("./config.js");
+﻿var config = require("./config.js");
+var filehelper = require("./filehelper.js");
 // Different image libraries used on dev and prod!
 var sharp = process.env.NODE_ENV == "production" ? require("sharp") : null;
 var jimp = process.env.NODE_ENV == "production" ? null : require("jimp");
@@ -9,24 +9,6 @@ var image = (function () {
 
   const maxW = 1600;
   const maxH = 1000;
-
-  function copyFile(source, target, cb) {
-    var cbCalled = false;
-    var rd = fs.createReadStream(source);
-    rd.on("error", done);
-    var wr = fs.createWriteStream(target);
-    wr.on("error", done);
-    wr.on("close", function (ex) {
-      done();
-    });
-    rd.pipe(wr);
-    function done(err) {
-      if (!cbCalled) {
-        cb(err);
-        cbCalled = true;
-      }
-    }
-  }
 
   function processImage(guid) {
     return new Promise((resolve, reject) => {
@@ -52,6 +34,8 @@ var image = (function () {
           img.write(fnLarge, function (err, img) {
             if (err) return reject(err);
             img.scaleToFit(200, 200);
+            result.mediumw = img.bitmap.width;
+            result.mediumh = img.bitmap.height;
             img.quality(90);
             img.write(fnMedium, function (err, img) {
               if (err) return reject(err);
@@ -70,6 +54,8 @@ var image = (function () {
             if (err) return reject(err);
             result.origw = md.width;
             result.origh = md.height;
+            result.mediumw = info.width;
+            result.mediumh = info.height;
             result.finalw = result.origw;
             result.finalh = result.origh;
             if (md.width > 1600) {
@@ -81,7 +67,7 @@ var image = (function () {
               });
             }
             else {
-              copyFile(fnOrig, fnLarge, function (err) {
+              filehelper.copy(fnOrig, fnLarge, function (err) {
                 if (err) return reject(err);
                 else resolve(result);
               });

@@ -21,7 +21,6 @@ App.upload = (function () {
 
   // Called when navigating around within front
   function move(newPath) {
-    state = null;
     fetchData(false);
   }
 
@@ -30,15 +29,15 @@ App.upload = (function () {
     var req = App.auth.ajax("/api/getuploadslots", "GET");
     req.done(function (data) {
       if (slotReqId != reqId) return;
-      state = {};
-      if (fullRender) App.inside.renderSticker();
+      if (fullRender || $(".stickerFront").length == 0) App.inside.renderSticker();
       renderInner(data);
     });
     req.fail(function (jqXHR, textStatus, error) {
       if (slotReqId != reqId) return;
+      state = null;
       if (jqXHR.status == 401) App.auth.renderLogin();
       else {
-        if (fullRender) App.inside.renderSticker();
+        if (fullRender || $(".stickerFront").length == 0) App.inside.renderSticker();
         renderOops();
       }
     });
@@ -46,11 +45,14 @@ App.upload = (function () {
 
   function renderInner(data) {
     $(".content-inner").html(zsnippets["in-upload"]);
-    $("#txtCity").val(data.city);
+    if (state) $("#txtCity").val(state.city);
+    else $("#txtCity").val(data.city);
+    if (state) $("#txtTitle").val(state.title);
     initDateWidget(data.dates);
     $("#txtCity").on("input", onCityChanged);
     $("#txtCity").focus().val($("#txtCity").val()); // This puts caret at end of text
     $(".btnGoToPreview").click(onGoToPreview);
+    if (state && state.imgGuid) showImageFromState();
     $(".uploadHot").click(onUploadClicked);
     $(".uploadHot").on("drop", function (event) {
       $(".uploadHot").removeClass("dragging");
@@ -129,9 +131,9 @@ App.upload = (function () {
   }
 
   function uploadSuccess(data) {
+    if (!state) state = {};
     state.imgGuid = data.guid;
     state.imgOrigBytes = data.size;
-    var origBytesFmt = "" + Math.floor(state.imgOrigBytes / 1024);
     $(".upload-widget .processing").addClass("visible");
 
     var req = App.auth.ajax("/api/processimage", "POST", { guid: data.guid });
@@ -140,20 +142,27 @@ App.upload = (function () {
       state.origh = data.origh;
       state.finalw = data.finalw;
       state.finalh = data.finalh;
+      state.mediumw = data.mediumw;
+      state.mediumh = data.mediumh;
       $(".upload-widget .processing").removeClass("visible");
       $(".upload-widget .progress").css("width", "0");
-      $(".upload-widget img").attr("src", "/uploads/" + state.imgGuid + "-md.jpg");
-      $(".uploadHot").html("want a different picture?<br/>just upload again the same way");
-      var imgInfo = origBytesFmt + "KB, " + state.origw + " x " + state.origh;
-      if (state.finalw != state.origw) {
-        imgInfo += "\nresized to " + state.finalw + " x " + state.finalh;
-      }
-      $(".image-upload-info").html(imgInfo);
+      showImageFromState();
     });
     req.fail(function (jqXHR, textStatus, error) {
       if (jqXHR.status == 401) App.auth.renderLogin();
       else uploadFail();
     });
+  }
+
+  function showImageFromState() {
+    var origBytesFmt = "" + Math.floor(state.imgOrigBytes / 1024);
+    $(".upload-widget img").attr("src", "/uploads/" + state.imgGuid + "-md.jpg");
+    $(".uploadHot").html("want a different one?<br/>click to upload and replace");
+    var imgInfo = origBytesFmt + "KB, " + state.origw + " x " + state.origh;
+    if (state.finalw != state.origw) {
+      imgInfo += "\nresized to " + state.finalw + " x " + state.finalh;
+    }
+    $(".image-upload-info").html(imgInfo);
   }
 
   function onGoToPreview() {
@@ -192,18 +201,48 @@ App.upload = (function () {
   }
 
   function onPublishPreview() {
-    // TO-DO
-    enter();
+    var params = {
+      guid: state.imgGuid,
+      dateint: state.dateint,
+      city: state.city,
+      title: state.title,
+      largew: state.finalw,
+      largeh: state.finalh,
+      mediumw: state.mediumw,
+      mediumh: state.mediumh
+    };
+    var req = App.auth.ajax("/api/publishimage", "POST", params);
+    req.done(function (data) {
+      // Req OK, but publish failed
+      if (data.error) {
+        if (data.error == "slottaken") renderSlotTaken();
+        else {
+          $(".stickerFront").remove();
+          renderOops();
+        }
+      }
+      // Publish OK! > Redirect to new image
+      else {
+        $(".stickerFront").remove();
+        var path = "/past/" + state.dateint + "/" + encodeURIComponent(state.city);
+        App.page.inPageNavigate(path);
+      }
+    });
+    req.fail(function (jqXHR, textStatus, error) {
+      $(".stickerFront").remove();
+      if (jqXHR.status == 401) App.auth.renderLogin();
+      else renderOops();
+    });
+    // Show progress until request returns
+    $(".stickerFront .menu").html('<span><i class="fa fa-spinner fa-pulse fa-fw"></i></span>');
   }
 
   function onRejectPreview() {
-    // TO-DO
-    enter();
+    move();
+    App.inside.renderSticker();
   }
 
   function onCityChanged() {
-    $(".date-widget .day").removeClass("selected");
-    $(".date-widget .day").addClass("disabled");
     var city = $("#txtCity").val().trim();
     if (city == "") {
       $(".formRow.date").addClass("empty")
@@ -214,37 +253,53 @@ App.upload = (function () {
     var req = App.auth.ajax("/api/getuploadslots", "GET", { city: city });
     req.done(function (data) {
       if (slotReqId != reqId) return;
-      initDateWidget(data.dates);
+      updateDateWidget(data.dates);
     });
     req.fail(function (jqXHR, textStatus, error) {
       if (slotReqId != reqId) return;
       if (jqXHR.status == 401) App.auth.renderLogin();
-      else  renderOops();
+      else renderOops();
     });
   }
 
   function initDateWidget(dates) {
-    // Select latest available slot
-    var selIx = -1;
-    for (var i = dates.length - 1; i >= 0; --i) {
-      if (dates[i].free) {
-        selIx = i;
-        break;
-      }
-    }
+    // Render days
     var html = "";
     for (var i = dates.length - 1; i >= 0; --i) {
       var itm = dates[i];
       html += "<div class='day";
       if (!itm.free) html += " disabled";
-      if (i == selIx) html += " selected";
       html += "' data-dateint='" + itm.dateint + "'";
       html += " data-datestr='" + itm.dateStr + "'>";
       html += itm.month + "/" + itm.dayOfMonth + "<br/>" + itm.dayStr;
       html += "</div>";
     }
     $(".date-widget").html(html);
-    if (selIx == -1) $(".formRow.date").addClass("empty");
+    // We have a state, and last selected day is still available: select it
+    var selected = false;
+    if (state && state.dateint) {
+      var elmDay = $(".date-widget .day[data-dateint='" + state.dateint + "']");
+      if (elmDay.length != 0 && !elmDay.hasClass("disabled")) {
+        elmDay.addClass("selected");
+        selected = true;
+      }
+    }
+    // Nothing selected yet? Select latest available slot
+    if (!selected) {
+      var lastAvailDateint = 0;
+      for (var i = dates.length - 1; i >= 0; --i) {
+        if (dates[i].free) {
+          lastAvailDateint = dates[i].dateint;
+          break;
+        }
+      }
+      if (lastAvailDateint > 0) {
+        $(".date-widget .day[data-dateint='" + lastAvailDateint + "']").addClass("selected");
+        selected = true;
+      }
+    }
+
+    if (!selected) $(".formRow.date").addClass("empty");
     else $(".formRow.date").removeClass("empty");
     $(".date-widget .day").click(function () {
       if ($(".formRow.date").hasClass("empty")) return;
@@ -252,6 +307,43 @@ App.upload = (function () {
       $(".date-widget .day").removeClass("selected");
       $(this).addClass("selected");
     });
+  }
+
+  function updateDateWidget(dates) {
+    var selected = false;
+    $(".date-widget .day").each(function () {
+      var di = $(this).data("dateint");
+      var avail = false;
+      for (var i = 0; i != dates.length; ++i) {
+        if (dates[i].dateint == di && dates[i].free) avail = true;
+      }
+      if (avail) $(this).removeClass("disabled");
+      else $(this).addClass("disabled");
+      if (state && state.dateint && di == state.dateint) {
+        $(this).addClass("selected");
+        selected = true;
+      }
+      else $(this).removeClass("selected");
+    });
+    // Nothing selected? Select latest available slot.
+    if (!selected) {
+      var lastAvailDateint = 0;
+      for (var i = dates.length - 1; i >= 0; --i) {
+        if (dates[i].free) {
+          lastAvailDateint = dates[i].dateint;
+          break;
+        }
+      }
+      if (lastAvailDateint > 0) {
+        $(".date-widget .day[data-dateint='" + lastAvailDateint + "']").addClass("selected");
+        selected = true;
+      }
+    }
+  }
+
+  function renderSlotTaken() {
+    $(".stickerFront").remove();
+    $(".content-inner").html(zsnippets["in-slottaken"]);
   }
 
   function renderOops() {

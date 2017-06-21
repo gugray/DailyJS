@@ -113,18 +113,16 @@ var routes = function (app) {
   });
 
   app.post("/api/logout", function (req, res) {
-    if (req.dailyToken) {
-      sessions.logout(req.dailyToken).then(
-        (result) => {
-          if (result) res.send("bye");
-          else res.status(401).send("invalid token");
-        },
-        (err) => {
-          res.status(500).send("internal server error");
-        }
-      );
-    }
-    else res.status(401).send("not authenticated");
+    if (!req.dailyUserName) return res.status(401).send("authentication needed");
+    sessions.logout(req.dailyToken).then(
+      (result) => {
+        if (result) res.send("bye");
+        else res.status(401).send("invalid token");
+      },
+      (err) => {
+        res.status(500).send("internal server error");
+      }
+    );
   });
 
   app.post("/api/resetsecret", function (req, res) {
@@ -135,31 +133,27 @@ var routes = function (app) {
   });
 
   app.get("/api/history", function (req, res) {
-    if (req.dailyUserName) {
-      var q = req.query;
-      var qUser = q.user ? decodeURIComponent(q.user) : null;
-      var qCity = q.city ? decodeURIComponent(q.city) : null;
-      db.getHistory(q.year, q.month, qUser, qCity).then(
-        (result) => {
-          if (!result) res.status(400).send("invalid request");
-          else res.send(result);
-        },
-        (err) => {
-          res.status(500).send("internal server error");
-        }
-      );
-    }
-    else res.status(401).send("authentication needed");
+    if (!req.dailyUserName) return res.status(401).send("authentication needed");
+    var q = req.query;
+    var qUser = q.user ? decodeURIComponent(q.user) : null;
+    var qCity = q.city ? decodeURIComponent(q.city) : null;
+    db.getHistory(q.year, q.month, qUser, qCity).then(
+      (result) => {
+        if (!result) res.status(400).send("invalid request");
+        else res.send(result);
+      },
+      (err) => {
+        res.status(500).send("internal server error");
+      }
+    );
   });
 
   app.get("/api/getprofile", function (req, res) {
-    if (req.dailyUserName) {
-      db.getUserProfile(req.dailyUserId).then(
-        (result) => { res.send(result); },
-        (err) => { res.status(500).send("internal server error"); }
-      );
-    }
-    else res.status(401).send("authentication needed");
+    if (!req.dailyUserName) return res.status(401).send("authentication needed");
+    db.getUserProfile(req.dailyUserId).then(
+      (result) => { res.send(result); },
+      (err) => { res.status(500).send("internal server error"); }
+    );
   });
 
   function verifySecretDummy(ctxt) {
@@ -169,60 +163,56 @@ var routes = function (app) {
   }
 
   app.post("/api/changeprofile", function (req, res) {
-    if (req.dailyUserName) {
-      var q = req.body;
-      var ctxt = {
-        result: {},
-        userId: req.dailyUserId,
-        field: q.field
-      };
-      var verifyFun = verifySecretDummy;
-      if (ctxt.field == "defcity") {
-        if (!q.newDefCity) { res.status(400).send("invalid request"); return; }
-        ctxt.newDefCity = q.newDefCity.trim().toLowerCase();
-      }
-      else if (ctxt.field == "email") {
-        if (!q.secret) { res.status(400).send("invalid request"); return; }
-        if (!q.newEmail) { res.status(400).send("invalid request"); return; }
-        ctxt.secret = q.secret;
-        ctxt.newEmail = q.newEmail.trim().toLowerCase();
-        verifyFun = sessions.verifyUserSecret;
-      }
-      else if (ctxt.field == "secret") {
-        if (!q.secret) { res.status(400).send("invalid request"); return; }
-        if (!q.newSecret) { res.status(400).send("invalid request"); return; }
-        ctxt.secret = q.secret;
-        ctxt.newSecret = q.newSecret;
-        verifyFun = sessions.verifyUserSecret;
-      }
-      else { res.status(400).send("invalid request"); return; }
-      verifyFun(ctxt)
-        .then(db.changeUserProfile)
-        .then(
-          (result) => {
-            setTimeout(function () { res.send(result); }, 1000); 
-          },
-          (err) => { res.status(500).send("internal server error"); }
-        );
+    if (!req.dailyUserName) return res.status(401).send("authentication needed");
+    var q = req.body;
+    var ctxt = {
+      result: {},
+      userId: req.dailyUserId,
+      field: q.field
+    };
+    var verifyFun = verifySecretDummy;
+    if (ctxt.field == "defcity") {
+      if (!q.newDefCity) { res.status(400).send("invalid request"); return; }
+      ctxt.newDefCity = q.newDefCity.trim().toLowerCase();
     }
-    else res.status(401).send("authentication needed");
+    else if (ctxt.field == "email") {
+      if (!q.secret) { res.status(400).send("invalid request"); return; }
+      if (!q.newEmail) { res.status(400).send("invalid request"); return; }
+      ctxt.secret = q.secret;
+      ctxt.newEmail = q.newEmail.trim().toLowerCase();
+      verifyFun = sessions.verifyUserSecret;
+    }
+    else if (ctxt.field == "secret") {
+      if (!q.secret) { res.status(400).send("invalid request"); return; }
+      if (!q.newSecret) { res.status(400).send("invalid request"); return; }
+      ctxt.secret = q.secret;
+      ctxt.newSecret = q.newSecret;
+      verifyFun = sessions.verifyUserSecret;
+    }
+    else { res.status(400).send("invalid request"); return; }
+    verifyFun(ctxt)
+      .then(db.changeUserProfile)
+      .then(
+      (result) => {
+        setTimeout(function () { res.send(result); }, 1000);
+      },
+      (err) => { res.status(500).send("internal server error"); }
+      );
   });
 
   app.get("/api/getuploadslots", function (req, res) {
-    if (req.dailyUserName) {
-      var q = req.query;
-      var qCity = q.city ? decodeURIComponent(q.city).trim().toLowerCase() : null;
-      db.getUploadSlots(req.dailyUserId, qCity).then(
-        (result) => {
-          if (!result) res.status(400).send("invalid request");
-          else res.send(result);
-        },
-        (err) => {
-          res.status(500).send("internal server error");
-        }
-      );
-    }
-    else res.status(401).send("authentication needed");
+    if (!req.dailyUserName) return res.status(401).send("authentication needed");
+    var q = req.query;
+    var qCity = q.city ? decodeURIComponent(q.city).trim().toLowerCase() : null;
+    db.getUploadSlots(req.dailyUserId, qCity).then(
+      (result) => {
+        if (!result) res.status(400).send("invalid request");
+        else res.send(result);
+      },
+      (err) => {
+        res.status(500).send("internal server error");
+      }
+    );
   });
 
   app.post("/api/uploadimage", function (req, res) {
@@ -265,6 +255,32 @@ var routes = function (app) {
     if (!req.dailyUserName) return res.status(401).send("authentication needed");
     if (!req.body.guid) return res.status(400).send("invalid request");
     image.processImage(req.body.guid).then(
+      (result) => {
+        res.send(result);
+      },
+      (err) => {
+        res.status(500).send("internal server error");
+      }
+    );
+  });
+
+  app.post("/api/publishimage", function (req, res) {
+    if (!req.dailyUserName) return res.status(401).send("authentication needed");
+    var params = {
+      userId: req.dailyUserId,
+      guid: req.body.guid,
+      dateint: req.body.dateint,
+      city: req.body.city,
+      title: req.body.title,
+      largew: req.body.largew,
+      largeh: req.body.largeh,
+      mediumw: req.body.mediumw,
+      mediumh: req.body.mediumh
+    };
+    var anyMissing = (!params.guid || !params.dateint || !params.city || !params.title);
+    anyMissing |= (!params.largew || !params.largeh || !params.mediumw || !params.mediumh);
+    if (anyMissing) return res.status(400).send("invalid request");
+    db.publishImage(params).then(
       (result) => {
         res.send(result);
       },

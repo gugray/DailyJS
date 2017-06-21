@@ -1,4 +1,5 @@
 ﻿var config = require("./config.js");
+var filehelper = require("./filehelper.js");
 var crypt = require("./crypt.js");
 var mysql = require('mysql');
 var dateformat = require("./dateformat.js");
@@ -602,7 +603,13 @@ var db = (function () {
   }
 
   var _selDefCity = "SELECT defcity FROM users WHERE id=?;";
-  var _selBusySlots = "SELECT dateint FROM images WHERE (city=? OR user_id = ?) AND (dateint >= ? AND dateint <= ?);";
+  var _selBusySlots = "SELECT dateint FROM images WHERE (city=? OR user_id=?) AND (dateint >= ? AND dateint <= ?);";
+  var _selSlotCount = "SELECT COUNT(*) AS count FROM images WHERE (city=? OR user_id=?) AND (dateint=?);";
+  var _insImage = "\
+    INSERT INTO images\
+    (dateint, user_id, city, title, imgfile, largew, largeh, smallw, smallh, mediumw, mediumh)\
+    VALUES(?, ?, ?, ?, ?, ?, ?, 0, 0, ?, ?);\
+  ";
 
   function selCityIfNeeded(ctxt) {
     return new Promise((resolve, reject) => {
@@ -678,6 +685,81 @@ var db = (function () {
     });
   }
 
+  function verifyUploadSlot(ctxt) {
+    return new Promise((resolve, reject) => {
+      // DBG
+      if (ctxt.params.largew == 1600) {
+        ctxt.error = "slottaken";
+        return resolve(ctxt);
+      }
+      var qparams = [ctxt.params.city, ctxt.params.userId, ctxt.params.dateint];
+      ctxt.conn.query(_selSlotCount, qparams, (err, rows) => {
+        if (err) return reject(err);
+        try {
+          if (rows.length != 1) throw new Error("Failed to get image count for date, city and user.");
+          if (rows[0].count != 0) ctxt.error = "slottaken";
+          resolve(ctxt);
+        }
+        catch (ex) {
+          return reject(ex);
+        }
+      });
+    });
+  }
+
+  function moveUploadFiles(ctxt) {
+    return new Promise((resolve, reject) => {
+      if (ctxt.error) return resolve(ctxt);
+      var uplMd = config.uploadDir + "/" + ctxt.params.guid + "-md.jpg";
+      var uplLg = config.uploadDir + "/" + ctxt.params.guid + "-lg.jpg";
+      var pubMd = config.imageDir + "/" + ctxt.params.guid + "-md.jpg";
+      var pubLg = config.imageDir + "/" + ctxt.params.guid + ".jpg";
+      filehelper.move(uplMd, pubMd, (err) => {
+        if (err) return reject(err);
+        filehelper.move(uplLg, pubLg, (err) => {
+          if (err) return reject(err);
+          return resolve(ctxt);
+        });
+      });
+    });
+  }
+
+  function insNewImage(ctxt) {
+    return new Promise((resolve, reject) => {
+      if (ctxt.error) return resolve(ctxt);
+      // (dateint, user_id, city, title, imgfile, largew, largeh, 0, 0, mediumw, mediumh)
+      var qparams = [ctxt.params.dateint, ctxt.params.userId, ctxt.params.city, ctxt.params.title];
+      qparams.push(ctxt.params.guid + ".jpg");
+      qparams.push(ctxt.params.largew);
+      qparams.push(ctxt.params.largeh);
+      qparams.push(ctxt.params.mediumw);
+      qparams.push(ctxt.params.mediumh);
+      ctxt.conn.query(_insImage, qparams, (err) => {
+        if (err) return reject(err);
+        resolve(ctxt);
+      });
+    });
+  }
+
+  function publishImage(params) {
+    return new Promise((resolve, reject) => {
+      var ctxt = { params: params };
+      getConn(ctxt)
+        .then(verifyUploadSlot)
+        .then(moveUploadFiles)
+        .then(insNewImage)
+        .then((ctxt) => {
+          if (ctxt.conn) { ctxt.conn.release(); ctxt.conn = null; }
+          var result = { error: ctxt.error };
+          resolve(result);
+        })
+        .catch((err) => {
+          if (ctxt.conn) ctxt.conn.release();
+          return reject(ctxt);
+        });
+    });
+  }
+
   return {
     getLatestImage: getLatestImage,
     getImage: getImage,
@@ -685,7 +767,8 @@ var db = (function () {
     getHistory: getHistory,
     getUserProfile: getUserProfile,
     changeUserProfile: changeUserProfile,
-    getUploadSlots: getUploadSlots
+    getUploadSlots: getUploadSlots,
+    publishImage: publishImage
   };
 })();
 
