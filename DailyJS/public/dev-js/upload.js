@@ -265,7 +265,7 @@ App.upload = (function () {
   function initDateWidget(dates) {
     // Render days
     var html = "";
-    for (var i = dates.length - 1; i >= 0; --i) {
+    for (var i = 0; i < dates.length; ++i) {
       var itm = dates[i];
       html += "<div class='day";
       if (!itm.free) html += " disabled";
