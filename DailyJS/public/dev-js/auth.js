@@ -57,6 +57,14 @@ App.auth = (function (path) {
       }
     });
     request.done(function (data, textStatus, xtra) {
+      // Verify app version, reload if server has been updated
+      var srvVer = xtra.getResponseHeader("DailyAppVer");
+      var cliVer = $("body").data("ver");
+      if (srvVer && cliVer && srvVer != cliVer) {
+        window.location.reload(true);
+        return;
+      }
+      // Session administration
       var wasLoggedIn = isLoggedIn();
       var loggedIn = xtra.getResponseHeader("LoggedIn") === "true";
       if (!loggedIn && wasLoggedIn && localStorage.getItem("token")) {

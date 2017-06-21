@@ -1,6 +1,7 @@
 ﻿var config = require("./config.js");
 var crypto = require("crypto");
 var db = require("./db.js");
+var pjson = require("./package.json");
 
 var sessions = (function () {
 
@@ -38,6 +39,7 @@ var sessions = (function () {
   // Verifies authenticated session before serving requests
   // Updates session status; infuses info for later handlers
   function sessionWare(req, res, next) {
+    // Check authorization token, infuse user info if logged in
     if (req.headers.authorization) {
       var token = req.headers.authorization.replace("Bearer ", "");
       var s = getSession(token);
@@ -49,6 +51,9 @@ var sessions = (function () {
         req.dailyToken = token;
       }
     }
+    // Infuse current version
+    res.header("DailyAppVer", pjson.version);
+    // Move on
     next();
   }
 

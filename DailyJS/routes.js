@@ -1,5 +1,4 @@
-﻿//var request = require("request");
-var formidable = require("formidable");
+﻿var formidable = require("formidable");
 var fs = require("fs");
 var uuidv1 = require("uuid/v1");
 var db = require("./db.js");
