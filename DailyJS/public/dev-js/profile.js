@@ -116,7 +116,7 @@ App.profile = (function () {
   function wireupSecret() {
     $(".formRow.secret input").keyup(function (event) {
       if (event.keyCode == 13) {
-        if (!$(this).hasClass("disabled")) submitSecret();
+        if (!$(".formRow.secret.save").hasClass("disabled")) submitSecret();
         return false;
       }
       if (event.keyCode == 27) {
@@ -203,7 +203,7 @@ App.profile = (function () {
   function wireupEmail() {
     $(".formRow.email input").keyup(function (event) {
       if (event.keyCode == 13) {
-        if (!$(this).hasClass("disabled")) submitEmail();
+        if (!$(".formRow.email .save").hasClass("disabled")) submitEmail();
         return false;
       }
       if (event.keyCode == 27) {
