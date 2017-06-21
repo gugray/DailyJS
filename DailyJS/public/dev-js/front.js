@@ -14,6 +14,7 @@ App.front = (function (path) {
 
   // Called when front first shown, or navigated to from back
   function enter() {
+    clearNotMine();
     if (!initView()) return;
     fetchFrontData();
   }
@@ -21,7 +22,17 @@ App.front = (function (path) {
   // Called when navigating around within front
   function move(newPath) {
     path = newPath;
+    if (clearNotMine()) initView();
     fetchFrontData();
+  }
+
+  function clearNotMine() {
+    if ($(".stickerFront").length == 0 || $(".image-holder").length == 0) {
+      $(".stickerFront").remove();
+      $(".image-holder").remove();
+      return true;
+    }
+    return false;
   }
 
   function initView() {
