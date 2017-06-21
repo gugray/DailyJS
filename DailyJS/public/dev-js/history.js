@@ -38,8 +38,8 @@ App.history = (function (path) {
     user = params.user ? decodeURIComponent(params.user) : null;
     // Our position on calendar, with filter - needed for rendered nav links
     navBase = "/inside/history";
-    if (params.city) navBase += "/c/" + encodeURIComponent(params.city);
-    else if (params.user) navBase += "/u/" + encodeURIComponent(params.user);
+    if (params.city) navBase += "/c/" + params.city;
+    else if (params.user) navBase += "/u/" + params.user;
     // Retrieve history to render
     var req = App.auth.ajax("/api/history", "GET", params);
     req.done(function (data) {
