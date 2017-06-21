@@ -22,8 +22,15 @@ body {
   box-sizing: border-box; padding: 1rem 1.5rem 0.5rem 1.5rem;
   background-color: @clrBg; color: @clrText;
 }
+// Fuck IE
 i.fa { cursor: default; }
 input::-ms-clear { display: none; width: 0; height: 0; }
+// Fuck iOS
+input {
+  border-radius: 0;
+  -webkit-appearance: none;
+  -webkit-border-radius:0px;
+}
 .plank { height: 100%; overflow: hidden; }
 .centrerBottom { bottom: 0; position: absolute; width: 100%; }
 .stickerBottom {
