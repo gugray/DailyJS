@@ -28,11 +28,11 @@ App.inside = (function () {
         App.page.inPageNavigate("/");
       });
       // Where am I?
-      if (App.page.path().startsWith("/inside/upload"))
+      if (App.page.path().indexOf("/inside/upload") == 0)
         $(".menu-item.menuUpload").addClass("selected");
-      else if (App.page.path().startsWith("/inside/history"))
+      else if (App.page.path().indexOf("/inside/history") == 0)
         $(".menu-item.menuHistory").addClass("selected");
-      else if (App.page.path().startsWith("/inside/profile"))
+      else if (App.page.path().indexOf("/inside/profile") == 0)
         $(".menu-item.menuProfile").addClass("selected");
     }
   };

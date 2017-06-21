@@ -247,7 +247,7 @@ App.history = (function (path) {
 App.page.registerPage({
   name: "history",
   isMyRoute: function (path) {
-    if (path == "/inside/history" || path.startsWith("/inside/history/")) return true;
+    if (path == "/inside/history" || path.indexOf("/inside/history/") == 0) return true;
     return false;
   },
   getController: function (path) {

@@ -287,7 +287,7 @@ App.profile = (function () {
 App.page.registerPage({
   name: "profile",
   isMyRoute: function (path) {
-    if (path.startsWith("/inside/profile")) return true;
+    if (path.indexOf("/inside/profile") == 0) return true;
     return false;
   },
   getController: function (path) {

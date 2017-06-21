@@ -100,7 +100,7 @@ App.front = (function (path) {
       });
     }
     // The past
-    else if (path.startsWith("/past/")) {
+    else if (path.indexOf("/past/") == 0) {
       var spec = path.replace("/past/", "");
       var parts = spec.split('/');
       var req = App.auth.ajax("/api/getimage", "GET", { date: parts[0], city: decodeURIComponent(parts[1]) });

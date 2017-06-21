@@ -80,7 +80,7 @@ App.upload = (function () {
   }
 
   function onUploadClicked() {
-    var fileSelector = $('<input type="file" accept=".jpg,.jpeg"></input>');
+    var fileSelector = $('<input type="file" accept=".jpg,.jpeg" hidden="true"></input>');
     fileSelector.click();
     fileSelector.change(function () {
       doUpload($(this)[0].files[0]);
@@ -360,7 +360,7 @@ App.upload = (function () {
 App.page.registerPage({
   name: "upload",
   isMyRoute: function (path) {
-    if (path.startsWith("/inside/upload")) return true;
+    if (path.indexOf("/inside/upload") == 0) return true;
     return false;
   },
   getController: function (path) {
