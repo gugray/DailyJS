@@ -687,11 +687,6 @@ var db = (function () {
 
   function verifyUploadSlot(ctxt) {
     return new Promise((resolve, reject) => {
-      // DBG
-      if (ctxt.params.largew == 1600) {
-        ctxt.error = "slottaken";
-        return resolve(ctxt);
-      }
       var qparams = [ctxt.params.city, ctxt.params.userId, ctxt.params.dateint];
       ctxt.conn.query(_selSlotCount, qparams, (err, rows) => {
         if (err) return reject(err);
