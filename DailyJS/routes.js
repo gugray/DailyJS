@@ -59,7 +59,7 @@ var routes = function (app) {
   });
 
   // Known pages that are only rendered app-side
-  app.get('(/inside/history|/inside/history/*|/inside/profile|/inside/upload)', function (req, res) {
+  app.get('(/inside/history|/inside/history/*|/inside/profile|/inside/upload|/x/*)', function (req, res) {
     res.render(__dirname + "/index.ejs", {
       prod: process.env.NODE_ENV == "production",
       ver: pjson.version,
@@ -126,9 +126,30 @@ var routes = function (app) {
 
   app.post("/api/resetsecret", function (req, res) {
     setTimeout(() => {
-      if (req.body.email.startsWith("a")) res.status(200).send();
-      else res.status(500).send();
+      if (!req.body.email) return res.status(400).send("invalid request");
+      var email = req.body.email.toLowerCase().trim();
+      db.sendResetLink(email).then(
+        (result) => {
+          res.send();
+        },
+        (err) => {
+          res.status(500).send("internal server error");
+        }
+      );
     }, 3000);
+  });
+
+  app.get("/api/checkmailcode", function (req, res) {
+    var code = req.query.mailcode;
+    if (!code) return res.status(400).send("invalid request");
+    db.checkMailCode(code).then(
+      (result) => {
+        res.send(result);
+      },
+      (err) => {
+        res.status(500).send("internal server error");
+      }
+    );
   });
 
   app.get("/api/history", function (req, res) {
@@ -181,19 +202,41 @@ var routes = function (app) {
       ctxt.newEmail = q.newEmail.trim().toLowerCase();
       verifyFun = sessions.verifyUserSecret;
     }
-    else if (ctxt.field == "secret") {
-      if (!q.secret) { res.status(400).send("invalid request"); return; }
-      if (!q.newSecret) { res.status(400).send("invalid request"); return; }
-      ctxt.secret = q.secret;
-      ctxt.newSecret = q.newSecret;
-      verifyFun = sessions.verifyUserSecret;
-    }
     else { res.status(400).send("invalid request"); return; }
     verifyFun(ctxt)
       .then(db.changeUserProfile)
       .then(
       (result) => {
         setTimeout(function () { res.send(result); }, 1000);
+      },
+      (err) => { res.status(500).send("internal server error"); }
+      );
+  });
+
+  app.post("/api/changesecret", function (req, res) {
+    // Either user is authenticated, or she has an email code
+    var userId = req.dailyUserId;
+    var mailCode = req.body.mailCode;
+    var oldSecret = req.body.oldSecret;
+    var newSecret = req.body.newSecret;
+    if (!newSecret) return res.status(400).send("invalid request");
+    if (userId && oldSecret && mailCode) return res.status(400).send("invalid request");
+    var canProceed = (userId && oldSecret) || mailCode;
+    if (!canProceed) return res.status(401).send("authentication needed");
+    // Verify: either old secret, or non-expired, non-used mail code
+    var verifyFun = userId ? db.verifyUserSecret : db.verifyMailCode;
+    var ctxt = {
+      result: {},
+      userId: userId,
+      secret: oldSecret,
+      mailCode: mailCode,
+      newSecret: newSecret
+    };
+    verifyFun(ctxt)
+      .then(db.changeSecret)
+      .then(
+      (ctxt) => {
+        setTimeout(function () { res.send(ctxt.result); }, 1000);
       },
       (err) => { res.status(500).send("internal server error"); }
       );

@@ -133,7 +133,6 @@ App.profile = (function () {
       var ok = true;
       if ($("#txtOldSecret").val().length == 0) ok = false;
       if ($("#txtNewSecret1").val().length == 0) ok = false;
-      if ($("#txtNewSecret2").val().length == 0) ok = false;
       if (ok) $(".formRow.secret .save").removeClass("disabled");
       else $(".formRow.secret .save").addClass("disabled");
     });
@@ -145,10 +144,6 @@ App.profile = (function () {
 
   function validateSecretPreSubmit() {
     var ok = true;
-    if ($("#txtNewSecret1").val() != $("#txtNewSecret2").val()) {
-      $(".formRow.secret .errNewSecret2").addClass("visible");
-      ok = false;
-    }
     var newSecret = $("#txtNewSecret1").val();
     var countUpper = 0;
     var countDigit = 0;
@@ -169,11 +164,10 @@ App.profile = (function () {
     $(".editor .error").removeClass("visible");
     if (!validateSecretPreSubmit()) return;
     var params = {
-      field: "secret",
-      secret: $("#txtOldSecret").val(),
+      oldSecret: $("#txtOldSecret").val(),
       newSecret: $("#txtNewSecret1").val()
     }
-    var req = App.auth.ajax("/api/changeprofile", "POST", params);
+    var req = App.auth.ajax("/api/changesecret", "POST", params);
     req.done(function (data) {
       $(".formRow.secret .cancelsave").removeClass("hidden");
       $(".formRow.secret .progress").removeClass("visible");

@@ -3,22 +3,39 @@
 var crypt = (function () {
   "use strict"
 
-  function isSameSecret(hash, salt, secret) {
-    return false;
+  function genRandomString(length) {
+    return crypto.randomBytes(Math.ceil(length / 2))
+      .toString('hex')
+      .slice(0, length)
+      .toLowerCase();
+  };
+
+  function verifyHash(secret, storedHash, salt) {
+    var hash = crypto.createHmac('sha512', salt);
+    hash.update(secret);
+    var value = hash.digest('hex');
+    return storedHash == value;
   }
 
   function getHashAndSalt(secret) {
-    var hash = "h" + secret;
-    var salt = "s" + secret;
+    var salt = genRandomString(32);
+    var hash = crypto.createHmac('sha512', salt);
+    hash.update(secret);
+    var value = hash.digest('hex');
     return {
-      hash: hash,
-      salt: salt
+      hash: value,
+      salt: salt,
     };
   }
 
+  function getMailCode() {
+    return genRandomString(24);
+  }
+
   return {
-    isSameSecret: isSameSecret,
-    getHashAndSalt: getHashAndSalt
+    verifyHash: verifyHash,
+    getHashAndSalt: getHashAndSalt,
+    getMailCode: getMailCode
   };
 
 })();

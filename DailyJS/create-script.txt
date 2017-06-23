@@ -27,6 +27,15 @@ CREATE TABLE users(
 
 DROP TABLE IF EXISTS past_secrets;
 CREATE TABLE past_secrets(
-    hash       VARCHAR(256) NOT NULL,
-    salt       VARCHAR(256) NOT NULL
+    hash              VARCHAR(256) NOT NULL,
+    salt              VARCHAR(256) NOT NULL,
+    user_id           INT NOT NULL
+) ENGINE=InnoDB CHARACTER SET=utf8 COLLATE utf8_general_ci;
+
+DROP TABLE IF EXISTS mail_codes;
+CREATE TABLE mail_codes(
+    code              VARCHAR(256) NOT NULL,
+    expiry            BIGINT NOT NULL,
+    action            INT NOT NULL,
+    user_id           INT NOT NULL
 ) ENGINE=InnoDB CHARACTER SET=utf8 COLLATE utf8_general_ci;

@@ -1,5 +1,6 @@
-﻿var config = require("./config.js");
-var crypto = require("crypto");
+﻿var crypto = require("crypto");
+var crypt = require("./crypt.js");
+var config = require("./config.js");
 var db = require("./db.js");
 var pjson = require("./package.json");
 
@@ -66,12 +67,16 @@ var sessions = (function () {
   function loginUserBySecret(users, secret, prevToken) {
     var user = null;
     for (var i = 0; i != users.length; ++i) {
-      // TO-DO: actual secret verification
       var thisUser = users[i];
-      if (thisUser.usrname == secret) {
+      if (crypt.verifyHash(secret, thisUser.secret_hash, thisUser.secret_salt)) {
         user = thisUser;
         break;
       }
+      // DBG
+      //if (thisUser.usrname == secret) {
+      //  user = thisUser;
+      //  break;
+      //}
     }
     // TO-DO: remove previous token?
     if (user == null) return null;
@@ -104,21 +109,10 @@ var sessions = (function () {
     });
   }
 
-  function verifyUserSecret(ctxt) {
-    // TO-DO: implement promise
-    return new Promise((resolve, reject) => {
-      if (ctxt.secret == "x") {
-        ctxt.result.error = "badsecret";
-      }
-      resolve(ctxt);
-    });
-  }
-
   return {
     sessionWare: sessionWare,
     login: login,
     logout: logout,
-    verifyUserSecret: verifyUserSecret,
     isLoggedIn: isLoggedIn
   };
 

@@ -27,9 +27,9 @@ i.fa { cursor: default; }
 input::-ms-clear { display: none; width: 0; height: 0; }
 // Fuck iOS
 input {
-  border-radius: 0;
   -webkit-appearance: none;
   -webkit-border-radius:0px;
+  border-radius: 0;
 }
 .plank { height: 100%; overflow: hidden; }
 .centrerBottom { bottom: 0; position: absolute; width: 100%; }
@@ -86,13 +86,21 @@ input {
   }
   .content-login {
     width: 20.5rem; float: none; margin: 4rem auto 0 auto; text-align: center;
-    p { text-align: center; margin-bottom: 0.5rem; }
+    p { font-size: 1.1rem; text-align: center; margin-bottom: 0.5rem; }
     .loginPanel { width: 20.5rem; position: relative; float: left; }
   }
   .content-badpage {
     width: 20.5rem; float: none; margin: 4rem auto 0 auto; text-align: center;
     a { color: @clrTextFaint; text-decoration: none; &:hover { color: @clrTextHover; } }
     p.main { font-size: 1.1rem; margin-bottom: 0.5rem; }
+  }
+  .content-mailcode {
+    width: 20.5rem; float: none; margin: 4rem auto 0 auto; text-align: center;
+    background-color: @clrRegionBg; padding: 0.5rem 0 1rem 0;
+    p { text-align: center; margin-bottom: 0.5rem; }
+    p.main { font-size: 1.1rem; font-weight: bold; }
+    .resetSecret { width: 20.5rem; position: relative; float: left; }
+    a { color: @clrTextFaint; text-decoration: none; &:hover { color: @clrTextHover; } }
   }
 }
 
@@ -120,6 +128,27 @@ input {
     display: block; position: absolute; left: 17.1rem; bottom: 0.1rem; font-size: 0.8rem;
     color: @clrText; cursor: pointer;
     &:hover { color: @clrTextHover; }
+  }
+}
+
+.resetSecret {
+  input {
+    width: 18rem; height: 2.5rem; padding: 0 0.6rem; margin: 0.5rem 0 0 0;
+    font-family: @fntBaseFamily; font-size: 1.3rem; background-color: @clrLighterBg; color: @clrText;
+    text-align: center;
+    &:focus { outline: none; -webkit-box-shadow: none; box-shadow: none; }
+    transition: background-color 1.5s ease;
+  }
+  .submit {
+    top: 0.5rem; height: 1.5rem; border-radius: 1.5rem; background-color: @clrText; color: @clrBg;
+    text-align: center; width: 19rem; margin: 0.5rem auto; float: none; cursor: default;
+    &:hover { background-color: @clrBlue; }
+    &.disabled, &.disabled:hover { background-color: @clrTextFaint; }
+  }
+  .error {
+    display: none; padding-left: 0.5rem; font-size: 0.9rem; color: @clrAlert;
+    text-align: right; padding-right: 0.6rem;
+    &.visible { display: block; }
   }
 }
 

@@ -15,7 +15,7 @@ App.inside = (function () {
       var usrName = App.auth.getUserName();
       if (usrName) {
         usrName = App.page.esc(usrName);
-        var helloHtml = "Hello, <span class='userName'>" + usrName + "</span>!";
+        var helloHtml = "hello, <span class='userName'>" + usrName + "</span>!";
         $(".sticker-inside .welcome").html(helloHtml)
       }
       // Go to front event handler

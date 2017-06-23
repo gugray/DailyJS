@@ -3,6 +3,7 @@ var filehelper = require("./filehelper.js");
 var crypt = require("./crypt.js");
 var mysql = require('mysql');
 var dateformat = require("./dateformat.js");
+var mailer = require("./mailer.js");
 
 var db = (function () {
   "use strict";
@@ -445,8 +446,6 @@ var db = (function () {
   var _updDefCity = "UPDATE users SET defcity=? WHERE id=?;"
   var _selOtherEmails = "SELECT COUNT(*) AS count FROM users WHERE id != ? AND email = ?;"
   var _updEmail = "UPDATE users SET email=? WHERE id=?;"
-  var _selPastSecrets = "SELECT * FROM past_secrets;"
-  var _updSecret = "UPDATE users SET secret_hash=?, secret_salt=? WHERE id=?;"
 
   function selUserProfile(ctxt) {
     return new Promise((resolve, reject) => {
@@ -538,46 +537,6 @@ var db = (function () {
     });
   }
 
-  function verifyUniqueSecret(ctxt) {
-    return new Promise((resolve, reject) => {
-      ctxt.conn.query(_selPastSecrets, (err, rows) => {
-        if (err) return reject(err);
-        try {
-          // TO-DO: merged query. If secret is current, email user!
-          var seenBefore = false;
-          // DBG
-          if (ctxt.newSecret == "ABCD1234") seenBefore = true;
-          for (var i = 0; i != rows.length && !seenBefore; ++i) {
-            var row = rows[i];
-            if (crypt.isSameSecret(row.hash, row.salt, ctxt.newSecret)) seenBefore = true;
-          }
-          if (seenBefore) ctxt.result.error = "knownsecret";
-          resolve(ctxt);
-        }
-        catch (ex) {
-          return reject(ex);
-        }
-      });
-    });
-  }
-
-  function updSecret(ctxt) {
-    return new Promise((resolve, reject) => {
-      if (ctxt.result.error) return resolve(ctxt);
-      var x = crypt.getHashAndSalt(ctxt.newSecret);
-      ctxt.conn.query(_updSecret, [x.hash, x.salt, ctxt.userId], (err, rows) => {
-        if (err) return reject(err);
-        try {
-          ctxt.result = { error: null };
-          resolve(ctxt);
-        }
-        catch (ex) {
-          return reject(ex);
-        }
-      });
-    });
-  }
-
   function changeUserProfile(ctxt) {
     return new Promise((resolve, reject) => {
       // If preceding verification step failed, nothing to do.
@@ -586,11 +545,314 @@ var db = (function () {
       var changeFun = null;
       if (ctxt.field == "defcity") changeFun = updDefCity;
       else if (ctxt.field == "email") { verifyFun = verifyUniqueEmail; changeFun = updEmail; }
-      else if (ctxt.field == "secret") { verifyFun = verifyUniqueSecret; changeFun = updSecret; }
       else throw new Error("Missing or wrong profile field to update.");
       getConn(ctxt)
         .then(verifyFun)
         .then(changeFun)
+        .then((ctxt) => {
+          if (ctxt.conn) { ctxt.conn.release(); ctxt.conn = null; }
+          resolve(ctxt.result);
+        })
+        .catch((err) => {
+          if (ctxt.conn) ctxt.conn.release();
+          return reject(ctxt);
+        });
+    });
+  }
+
+  var _selUserSecret = "SELECT secret_hash AS hash, secret_salt AS salt FROM users WHERE id=?;"
+  var _selAllSecrets = "\
+    SELECT secret_hash AS hash, secret_salt AS salt, id AS user_id, email, usrname\
+    FROM users WHERE secret_hash != '.'\
+    UNION ALL\
+    SELECT hash, salt, user_id, '', '' FROM past_secrets;\
+    ";
+  var _fileSecret = "\
+    INSERT INTO past_secrets (hash, salt, user_id)\
+    SELECT secret_hash AS hash, secret_salt AS salt, -id AS user_id FROM users WHERE id=?;\
+    ";
+  var _updateSecret = "\
+    UPDATE users SET secret_hash=?, secret_salt=? WHERE id=?;\
+    ";
+  var _setCodeUsed = "UPDATE mail_codes SET expiry=0 WHERE code=?;";
+
+  function doVerifyUniqueSecret(ctxt) {
+    return new Promise((resolve, reject) => {
+      ctxt.conn.query(_selAllSecrets, (err, rows) => {
+        if (err) return reject(err);
+        try {
+          var userIdToBump = null;
+          var userEmailToBump = null;
+          var userNameToBump = null;
+          for (var i = 0; i != rows.length && userIdToBump == null; ++i) {
+            var row = rows[i];
+            // User's own current secrets are OK
+            if (row.user_id == ctxt.userId || row.user_id == -ctxt.userId) continue;
+            if (crypt.verifyHash(ctxt.newSecret, row.hash, row.salt)) {
+              userIdToBump = row.user_id;
+              userEmailToBump = row.email;
+              userNameToBump = row.usrname;
+            }
+          }
+          if (userIdToBump != null) {
+            ctxt.result.error = "knownsecret";
+            // If this is a different user's *past* secret, nothing to bump
+            if (userIdToBump > 0) {
+              ctxt.userIdToBump = userIdToBump;
+              ctxt.userEmailToBump = userEmailToBump;
+              ctxt.userNameToBump = userNameToBump;
+            }
+          }
+          resolve(ctxt);
+        }
+        catch (ex) {
+          return reject(ex);
+        }
+      });
+    });
+  }
+
+  function doKillSecret(ctxt) {
+    return new Promise((resolve, reject) => {
+      if (!ctxt.userIdToBump) return resolve(ctxt);
+      ctxt.conn.query(_fileSecret, [ctxt.userIdToBump], (err, rows) => {
+        if (err) return reject(err);
+        ctxt.conn.query(_updateSecret, [".", ".", ctxt.userIdToBump], (err, rows) => {
+          if (err) return reject(err);
+          if (ctxt.userIdToBump != -1) {
+            // Not waiting for callback of this mail
+            try {
+              mailer.sendSecretBumped(ctxt.userEmailToBump, ctxt.userNameToBump);
+            }
+            catch (ex) {
+              // TO-DO: log
+            }
+          }
+          resolve(ctxt);
+        });
+      });
+    });
+  }
+
+  function doInvalidateMailCode(ctxt) {
+    return new Promise((resolve, reject) => {
+      if (ctxt.result.error) return resolve(ctxt);
+      if (!ctxt.mailCode) return resolve(ctxt);
+      ctxt.conn.query(_setCodeUsed, [ctxt.mailCode], (err, rows) => {
+        if (err) return reject(err);
+        resolve(ctxt);
+      });
+    });
+  }
+
+  function doUpdateSecret(ctxt) {
+    return new Promise((resolve, reject) => {
+      if (ctxt.result.error) return resolve(ctxt);
+      var hns = crypt.getHashAndSalt(ctxt.newSecret);
+      ctxt.conn.query(_fileSecret, [ctxt.userId], (err, rows) => {
+        if (err) return reject(err);
+        ctxt.conn.query(_updateSecret, [hns.hash, hns.salt, ctxt.userId], (err, rows) => {
+          if (err) return reject(err);
+          resolve(ctxt);
+        });
+      });
+    });
+  }
+
+  function changeSecret(ctxt) {
+    return new Promise((resolve, reject) => {
+      if (ctxt.result.error) return resolve(ctxt);
+      getConn(ctxt)
+        .then(doVerifyUniqueSecret)
+        .then(doKillSecret)
+        .then(doInvalidateMailCode)
+        .then(doUpdateSecret)
+        .then((ctxt) => {
+          if (ctxt.conn) { ctxt.conn.release(); ctxt.conn = null; }
+          resolve(ctxt);
+        })
+        .catch((err) => {
+          if (ctxt.conn) ctxt.conn.release();
+          return reject(ctxt);
+        });
+    });
+  }
+
+  // Same as doCheckMailCode, just output different
+  function doVerifyMailCode(ctxt) {
+    return new Promise((resolve, reject) => {
+      if (ctxt.result.error) return resolve(ctxt);
+      ctxt.conn.query(_selMailCode, [ctxt.mailCode], (err, rows) => {
+        if (err) return reject(err);
+        try {
+          ctxt.result.error = "badcode";
+          // No such code
+          if (rows.length != 1) return resove(ctxt);
+          // Is "token" still OK?
+          var expiry = new Date(rows[0].expiry)
+          if (expiry < new Date()) return resolve(ctxt); // Expired
+          ctxt.userId = rows[0].user_id;
+          delete ctxt.result.error;
+          resolve(ctxt);
+        }
+        catch (ex) {
+          return reject(ex);
+        }
+      });
+    });
+  }
+
+  function verifyMailCode(ctxt) {
+    return new Promise((resolve, reject) => {
+      if (ctxt.result.error) return resolve(ctxt);
+      getConn(ctxt)
+        .then(doVerifyMailCode)
+        .then((ctxt) => {
+          if (ctxt.conn) { ctxt.conn.release(); ctxt.conn = null; }
+          resolve(ctxt);
+        })
+        .catch((err) => {
+          if (ctxt.conn) ctxt.conn.release();
+          return reject(ctxt);
+        });
+    });
+  }
+
+  function doCheckUserSecret(ctxt) {
+    return new Promise((resolve, reject) => {
+      if (ctxt.result.error) return resolve(ctxt);
+      ctxt.conn.query(_selUserSecret, [ctxt.userId], (err, rows) => {
+        if (err) return reject(err);
+        try {
+          if (rows.length != 1) return reject("Failed to query user secret for ID.");
+          if (!crypt.verifyHash(ctxt.secret, rows[0].hash, rows[0].salt)) {
+            ctxt.result.error = "badsecret";
+          }
+          resolve(ctxt);
+        }
+        catch (ex) {
+          return reject(ex);
+        }
+      });
+    });
+  }
+
+  function verifyUserSecret(ctxt) {
+    return new Promise((resolve, reject) => {
+      if (ctxt.result.error) return resolve(ctxt);
+      getConn(ctxt)
+        .then(doCheckUserSecret)
+        .then((ctxt) => {
+          if (ctxt.conn) { ctxt.conn.release(); ctxt.conn = null; }
+          resolve(ctxt);
+        })
+        .catch((err) => {
+          if (ctxt.conn) ctxt.conn.release();
+          return reject(ctxt);
+        });
+    });
+  }
+
+  var _selUserByEmail = "\
+    SELECT id, usrname FROM users WHERE email=?;\
+  ";
+  var _insMailCode = "\
+    INSERT INTO mail_codes (code, expiry, action, user_id) VALUES (?, ?, ?, ?);\
+  ";
+  var _selMailCode = "SELECT * FROM mail_codes WHERE code=?;";
+
+  function selUserByEmail(ctxt) {
+    return new Promise((resolve, reject) => {
+      ctxt.conn.query(_selUserByEmail, [ctxt.email], (err, rows) => {
+        if (err) return reject(err);
+        try {
+          // If email not there, we don't return error: don't want to leak info about emails.
+          if (rows.length != 1) return resolve(ctxt);
+          ctxt.userId = rows[0].id;
+          ctxt.userName = rows[0].usrname;
+          resolve(ctxt);
+        }
+        catch (ex) {
+          return reject(ex);
+        }
+      });
+    });
+  }
+
+  function insMailCode(ctxt) {
+    return new Promise((resolve, reject) => {
+      if (!ctxt.userId) return resolve(ctxt);
+      var code = crypt.getMailCode();
+      var expiry = new Date().getTime() + 1000 * 60 * 60;
+      var qparams = [code, expiry, 1, ctxt.userId];
+      ctxt.conn.query(_insMailCode, qparams, (err, rows) => {
+        if (err) return reject(err);
+        ctxt.mailCode = code;
+        resolve(ctxt);
+      });
+    });
+  }
+
+  function mailResetLink(ctxt) {
+    return new Promise((resolve, reject) => {
+      if (!ctxt.mailCode) return resolve(ctxt);
+      mailer.sendSecretReset(ctxt.email, ctxt.userName, ctxt.mailCode, (err) => {
+        if (err) reject(err);
+        else resolve(ctxt);
+      });
+    });
+  }
+
+  function sendResetLink(email) {
+    return new Promise((resolve, reject) => {
+      var ctxt = {};
+      ctxt.email = email;
+      getConn(ctxt)
+        .then(selUserByEmail)
+        .then(insMailCode)
+        .then(mailResetLink)
+        .then((ctxt) => {
+          if (ctxt.conn) { ctxt.conn.release(); ctxt.conn = null; }
+          resolve(null);
+        })
+        .catch((err) => {
+          if (ctxt.conn) ctxt.conn.release();
+          return reject(ctxt);
+        });
+    });
+  }
+
+  function doCheckMailCode(ctxt) {
+    return new Promise((resolve, reject) => {
+      ctxt.conn.query(_selMailCode, [ctxt.code], (err, rows) => {
+        if (err) return reject(err);
+        try {
+          // No such code
+          if (rows.length != 1) return resolve(ctxt);
+          // Is "token" still OK?
+          var expiry = new Date(rows[0].expiry)
+          if (expiry < new Date()) return resolve(ctxt); // Expired
+          if (rows[0].action == 1) { // Reset secret
+            ctxt.result.status = "resetsecret";
+            ctxt.result.userId = rows[0].user_id;
+          }
+          // Unknown action: bad code
+          resolve(ctxt);
+        }
+        catch (ex) {
+          return reject(ex);
+        }
+      });
+    });
+  }
+
+  function checkMailCode(code) {
+    return new Promise((resolve, reject) => {
+      var ctxt = {};
+      ctxt.code = code;
+      ctxt.result = { status: "badcode" };
+      getConn(ctxt)
+        .then(doCheckMailCode)
         .then((ctxt) => {
           if (ctxt.conn) { ctxt.conn.release(); ctxt.conn = null; }
           resolve(ctxt.result);
@@ -762,6 +1024,11 @@ var db = (function () {
     getHistory: getHistory,
     getUserProfile: getUserProfile,
     changeUserProfile: changeUserProfile,
+    changeSecret: changeSecret,
+    verifyUserSecret: verifyUserSecret,
+    verifyMailCode: verifyMailCode,
+    sendResetLink: sendResetLink,
+    checkMailCode: checkMailCode,
     getUploadSlots: getUploadSlots,
     publishImage: publishImage
   };
