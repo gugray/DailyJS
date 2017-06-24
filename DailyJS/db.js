@@ -581,11 +581,7 @@ var db = (function () {
       console.log("doVerifyUniqueSecret");
       ctxt.conn.query(_selAllSecrets, (err, rows) => {
         console.log("doVerifyUniqueSecret-query");
-        if (err) {
-          console.log("query failed");
-          console.log(err);
-          return reject(err);
-        }
+        if (err) return reject(err);
         try {
           var userIdToBump = null;
           var userEmailToBump = null;
@@ -612,8 +608,6 @@ var db = (function () {
           resolve(ctxt);
         }
         catch (ex) {
-          console.log("exception");
-          console.log(ex);
           return reject(ex);
         }
       });
