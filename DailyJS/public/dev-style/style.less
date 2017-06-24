@@ -139,6 +139,13 @@ input {
     &:focus { outline: none; -webkit-box-shadow: none; box-shadow: none; }
     transition: background-color 1.5s ease;
   }
+  .showSecret {
+    position: absolute; top: 0.8rem; right: 0.8rem; width: 2rem; height: 2rem;
+    padding-top: 0.3rem;
+    i.fa { font-size: 1.2rem; color: @clrTextFaint; }
+    &:hover i.fa { color: @clrTextHover; }
+    &.active i.fa { color: @clrBlue; }
+  }
   .submit {
     top: 0.5rem; height: 1.5rem; border-radius: 1.5rem; background-color: @clrText; color: @clrBg;
     text-align: center; width: 19rem; margin: 0.5rem auto; float: none; cursor: default;

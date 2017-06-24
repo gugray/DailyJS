@@ -52,6 +52,24 @@ App.mailcode = (function () {
       else return true;
     });
     $(".submit").click(submit);
+    $(".showSecret").mousedown(function (evt) {
+      evt.stopPropagation();
+      evt.preventDefault();
+      if ($(this).hasClass("active")) {
+        $(this).removeClass("active");
+        $("#txtSecret").attr("type", "password");
+      }
+      else {
+        $(this).addClass("active");
+        $("#txtSecret").attr("type", "text");
+        var elm = $(this);
+        setTimeout(function () {
+          elm.removeClass("active");
+          $("#txtSecret").attr("type", "password");
+          $("#txtSecret").focus();
+        }, 2000);
+      }
+    });
   }
 
   function submit() {
