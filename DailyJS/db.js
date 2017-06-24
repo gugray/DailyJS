@@ -578,9 +578,7 @@ var db = (function () {
 
   function doVerifyUniqueSecret(ctxt) {
     return new Promise((resolve, reject) => {
-      console.log("doVerifyUniqueSecret");
       ctxt.conn.query(_selAllSecrets, (err, rows) => {
-        console.log("doVerifyUniqueSecret-query");
         if (err) return reject(err);
         try {
           var userIdToBump = null;
@@ -616,10 +614,8 @@ var db = (function () {
 
   function doKillSecret(ctxt) {
     return new Promise((resolve, reject) => {
-      console.log("doKillSecret");
       if (!ctxt.userIdToBump) return resolve(ctxt);
       ctxt.conn.query(_fileSecret, [ctxt.userIdToBump], (err, rows) => {
-        console.log("doKillSecret-query");
         if (err) return reject(err);
         ctxt.conn.query(_updateSecret, [".", ".", ctxt.userIdToBump], (err, rows) => {
           if (err) return reject(err);
@@ -640,11 +636,9 @@ var db = (function () {
 
   function doInvalidateMailCode(ctxt) {
     return new Promise((resolve, reject) => {
-      console.log("doInvalidateMailCode");
       if (ctxt.result.error) return resolve(ctxt);
       if (!ctxt.mailCode) return resolve(ctxt);
       ctxt.conn.query(_setCodeUsed, [ctxt.mailCode], (err, rows) => {
-        console.log("doInvalidateMailCode-query");
         if (err) return reject(err);
         resolve(ctxt);
       });
@@ -653,14 +647,11 @@ var db = (function () {
 
   function doUpdateSecret(ctxt) {
     return new Promise((resolve, reject) => {
-      console.log("doUpdateSecret");
       if (ctxt.result.error) return resolve(ctxt);
       var hns = crypt.getHashAndSalt(ctxt.newSecret);
       ctxt.conn.query(_fileSecret, [ctxt.userId], (err, rows) => {
-        console.log("doUpdateSecret-query1");
         if (err) return reject(err);
         ctxt.conn.query(_updateSecret, [hns.hash, hns.salt, ctxt.userId], (err, rows) => {
-          console.log("doUpdateSecret-query2");
           if (err) return reject(err);
           resolve(ctxt);
         });
@@ -670,7 +661,6 @@ var db = (function () {
 
   function changeSecret(ctxt) {
     return new Promise((resolve, reject) => {
-      console.log("changeSecret");
       if (ctxt.result.error) return resolve(ctxt);
       getConn(ctxt)
         .then(doVerifyUniqueSecret)
