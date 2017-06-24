@@ -1,8 +1,9 @@
 ﻿var config = require("./config.js");
 var filehelper = require("./filehelper.js");
 // Different image libraries used on dev and prod!
-var sharp = process.env.NODE_ENV == "production" ? require("sharp") : null;
-var jimp = process.env.NODE_ENV == "production" ? null : require("jimp");
+var useSharp = process.env.NODE_ENV == "production" && !process.env.USE_DEV_SETTINGS;
+var sharp = useSharp ? require("sharp") : null;
+var jimp = useSharp ? null : require("jimp");
 
 var image = (function () {
   "use strict"

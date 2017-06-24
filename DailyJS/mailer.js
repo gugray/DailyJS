@@ -41,7 +41,7 @@ var mailer = (function () {
 
   function sendSecretReset(email, userName, mailCode, callback) {
     var text = textReset.replace("{{usrname}}", userName);
-    text = text.replace("{{link}}", "https://daily.sojourn.nl/x/" + mailCode);
+    text = text.replace("{{link}}", config.baseUrl + "/x/" + mailCode);
     let mailOptions = {
       from: '"' + fromFriendly + '" <' + config.smtpFrom + '>',
       to: email,

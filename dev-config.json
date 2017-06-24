@@ -1,4 +1,5 @@
 {
+  "baseUrl": "http://localhost:3017",
   "imageDir": "../_images",
   "dbhost": "localhost",
   "dbport": 3306,
