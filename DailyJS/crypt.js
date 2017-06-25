@@ -1,7 +1,7 @@
 ﻿var crypto = require("crypto");
 
 var crypt = (function () {
-  "use strict"
+  "use strict";
 
   function genRandomString(length) {
     return crypto.randomBytes(Math.ceil(length / 2))

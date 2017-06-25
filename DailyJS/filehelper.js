@@ -33,6 +33,7 @@ var filehelper = (function () {
       }
       callback();
     });
+
     function copy() {
       var readStream = fs.createReadStream(oldPath);
       var writeStream = fs.createWriteStream(newPath);

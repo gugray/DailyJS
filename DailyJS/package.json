@@ -26,6 +26,7 @@
     "nodemailer": "^4.0.1",
     "request": "^2.81.0",
     "sharp": "^0.18.1",
+    "simple-node-logger": "^0.93.28",
     "uuid": "^3.1.0"
   },
   "devDependencies": {

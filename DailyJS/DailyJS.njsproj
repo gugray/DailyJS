@@ -40,6 +40,7 @@ USE_DEV_SETTINGS=false</Environment>
     <Compile Include="db.js" />
     <Compile Include="filehelper.js" />
     <Compile Include="image.js" />
+    <Compile Include="logger.js" />
     <Compile Include="mailer.js" />
     <Compile Include="public\dev-js\auth.js" />
     <Compile Include="public\dev-js\front.js" />

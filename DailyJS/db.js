@@ -216,7 +216,7 @@ var db = (function () {
         })
         .catch((err) => {
           if (ctxt.conn) ctxt.conn.release();
-          return reject(ctxt);
+          return reject(err);
         });
     });
   }
@@ -263,7 +263,7 @@ var db = (function () {
     return new Promise((resolve, reject) => {
       // Result must be here by now. Otherwise, nothing to do.
       if (!ctxt.result) return resolve(ctxt);
-      if (ctxt.city && ctxt.user) reject("Cannot filter by city and date at the same time");
+      if (ctxt.city && ctxt.user) return reject(new Error("Cannot filter by city and date at the same time"));
       var loBound = ctxt.result.currentYear * 10000 + ctxt.result.currentMonth * 100;
       var hiBound = loBound + 100;
       var query = _selMonthImages;
@@ -299,7 +299,7 @@ var db = (function () {
 
   function selHistoryCalendar(ctxt) {
     return new Promise((resolve, reject) => {
-      if (ctxt.city && ctxt.user) reject("Cannot filter by city and date at the same time");
+      if (ctxt.city && ctxt.user) return reject(new Error("Cannot filter by city and date at the same time"));
       var query = _selAllDateInts;
       var qparams = [];
       if (ctxt.city) { query = _selAllDateIntsCity; qparams.push(ctxt.city); }
@@ -354,15 +354,15 @@ var db = (function () {
 
   function selHistoryYearMonth(ctxt) {
     return new Promise((resolve, reject) => {
-      if (ctxt.month && !ctxt.year) return reject("Month specified but year is not");
-      if (ctxt.year && !ctxt.month) return reject("Year specified but month is not");
+      if (ctxt.month && !ctxt.year) return reject(new Error("Month specified but year is not"));
+      if (ctxt.year && !ctxt.month) return reject(new Error("Year specified but month is not"));
       if (ctxt.year) {
         ctxt.currentYear = ctxt.year;
         ctxt.currentMonth = ctxt.month;
         resolve(ctxt);
       }
       else {
-      if (ctxt.city && ctxt.user) reject("Cannot filter by city and date at the same time");
+        if (ctxt.city && ctxt.user) return reject(new Error("Cannot filter by city and date at the same time"));
         var query = _selMaxDateInt;
         var qparams = [];
         if (ctxt.city) { query = _selMaxDateIntCity; qparams.push(ctxt.city); }
@@ -370,7 +370,7 @@ var db = (function () {
         ctxt.conn.query(query, qparams, (err, rows) => {
           if (err) return reject(err);
           try {
-            if (rows.length != 1) return reject("Failed to get latest image timestamp");
+            if (rows.length != 1) return reject(new Error("Failed to get latest image timestamp"));
             var date = splitDateInt(rows[0].max);
             ctxt.currentYear = date.year;
             ctxt.currentMonth = date.month;
@@ -452,7 +452,7 @@ var db = (function () {
       ctxt.conn.query(_selUserProfile, [ctxt.userId], (err, rows) => {
         if (err) return reject(err);
         try {
-          if (rows.length != 1) return reject("Failed to retrieve user record");
+          if (rows.length != 1) return reject(new Error("Failed to retrieve user record"));
           var row = rows[0];
           ctxt.result = {
             usrname: row.usrname,
@@ -510,7 +510,7 @@ var db = (function () {
       ctxt.conn.query(_selOtherEmails, [ctxt.userId, ctxt.newEmail], (err, rows) => {
         if (err) return reject(err);
         try {
-          if (rows.length != 1) return reject("Failed to retrieve count of identical emails");
+          if (rows.length != 1) return reject(new Error("Failed to retrieve count of identical emails"));
           if (rows[0].count != 0) ctxt.result.error = "knownemail";
           resolve(ctxt);
         }
@@ -673,7 +673,7 @@ var db = (function () {
         })
         .catch((err) => {
           if (ctxt.conn) ctxt.conn.release();
-          return reject(ctxt);
+          return reject(err);
         });
     });
   }
@@ -713,7 +713,7 @@ var db = (function () {
         })
         .catch((err) => {
           if (ctxt.conn) ctxt.conn.release();
-          return reject(ctxt);
+          return reject(err);
         });
     });
   }
@@ -724,7 +724,7 @@ var db = (function () {
       ctxt.conn.query(_selUserSecret, [ctxt.userId], (err, rows) => {
         if (err) return reject(err);
         try {
-          if (rows.length != 1) return reject("Failed to query user secret for ID.");
+          if (rows.length != 1) return reject(new Error("Failed to query user secret for ID."));
           if (!crypt.verifyHash(ctxt.secret, rows[0].hash, rows[0].salt)) {
             ctxt.result.error = "badsecret";
           }
@@ -748,7 +748,7 @@ var db = (function () {
         })
         .catch((err) => {
           if (ctxt.conn) ctxt.conn.release();
-          return reject(ctxt);
+          return reject(err);
         });
     });
   }
@@ -817,7 +817,7 @@ var db = (function () {
         })
         .catch((err) => {
           if (ctxt.conn) ctxt.conn.release();
-          return reject(ctxt);
+          return reject(err);
         });
     });
   }
@@ -859,7 +859,7 @@ var db = (function () {
         })
         .catch((err) => {
           if (ctxt.conn) ctxt.conn.release();
-          return reject(ctxt);
+          return reject(err);
         });
     });
   }
@@ -942,7 +942,7 @@ var db = (function () {
         })
         .catch((err) => {
           if (ctxt.conn) ctxt.conn.release();
-          return reject(ctxt);
+          return reject(err);
         });
     });
   }
@@ -1012,7 +1012,7 @@ var db = (function () {
         })
         .catch((err) => {
           if (ctxt.conn) ctxt.conn.release();
-          return reject(ctxt);
+          return reject(err);
         });
     });
   }

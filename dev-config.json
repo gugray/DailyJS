@@ -1,6 +1,8 @@
 {
   "baseUrl": "http://localhost:3017",
   "imageDir": "../_images",
+  "uploadDir": "../_uploads",
+  "logDir": "../_logs",
   "dbhost": "localhost",
   "dbport": 3306,
   "dbuser": "root",
@@ -8,7 +10,6 @@
   "dbname": "daily_js",
   "dbconnlimit": 5,
   "sessionTimeoutSec": 600,
-  "uploadDir": "../_uploads",
   "smtpUrl": "smtp.sparkpostmail.com",
   "smtpPort": "587",
   "smtpUser": "SMTP_Injection",
