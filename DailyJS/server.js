@@ -6,16 +6,15 @@ process.on("uncaughtException", function (ex) {
   console.log(ex);
   setTimeout(function () {
     process.exit(-1);
-  }, 100);
+  }, 200);
 });
-
-//process.on('unhandledRejection', function (reason, p) {
-//  applog.error("Fatal: Unhandled rejection. Shutting down." + reason + p);
-//  console.log(reason + p);
-//  setTimeout(function () {
-//    process.exit(-1);
-//  }, 100);
-//});
+process.on('unhandledRejection', function (reason, p) {
+  applog.appError("Unhandled rejection. Shutting down.", reason);
+  console.log(reason);
+  setTimeout(function () {
+    process.exit(-1);
+  }, 200);
+});
 
 var express = require("express");
 var bodyParser = require("body-parser");
@@ -36,3 +35,13 @@ var routes = require("./routes.js")(app, logger);
 // Serve.
 var port = process.env.PORT || 3017;
 var server = app.listen(port);
+
+// Periodic cleanup (every hour)
+setInterval(function () {
+  try { sessions.cleanup(); }
+  catch (err) { logger.appError("Session cleanup failed", err); }
+  db.cleanup().then(
+    (result) => { },
+    (err) => { logger.appError("DB cleanup failed", err); }
+  );
+}, 1000 * 60 * 60);

@@ -753,13 +753,10 @@ var db = (function () {
     });
   }
 
-  var _selUserByEmail = "\
-    SELECT id, usrname FROM users WHERE email=?;\
-  ";
-  var _insMailCode = "\
-    INSERT INTO mail_codes (code, expiry, action, user_id) VALUES (?, ?, ?, ?);\
-  ";
+  var _selUserByEmail = "SELECT id, usrname FROM users WHERE email=?;";
+  var _insMailCode = "INSERT INTO mail_codes (code, expiry, action, user_id) VALUES (?, ?, ?, ?);";
   var _selMailCode = "SELECT * FROM mail_codes WHERE code=?;";
+  var _delOldMailCodes = "DELETE FROM mail_codes WHERE expiry<?;";
 
   function selUserByEmail(ctxt) {
     return new Promise((resolve, reject) => {
@@ -861,6 +858,15 @@ var db = (function () {
           if (ctxt.conn) ctxt.conn.release();
           return reject(err);
         });
+    });
+  }
+
+  function delOldMailCodes(ctxt) {
+    return new Promise((resolve, reject) => {
+      ctxt.conn.query(_delOldMailCodes, [new Date().getTime()], (err, rows) => {
+        if (err) return reject(err);
+        resolve(ctxt);
+      });
     });
   }
 
@@ -1017,6 +1023,22 @@ var db = (function () {
     });
   }
 
+  function cleanup() {
+    return new Promise((resolve, reject) => {
+      var ctxt = { };
+      getConn(ctxt)
+        .then(delOldMailCodes)
+        .then((ctxt) => {
+          if (ctxt.conn) { ctxt.conn.release(); ctxt.conn = null; }
+          resolve(true);
+        })
+        .catch((err) => {
+          if (ctxt.conn) ctxt.conn.release();
+          return reject(err);
+        });
+    });
+  }
+
   return {
     getLatestImage: getLatestImage,
     getImage: getImage,
@@ -1030,7 +1052,8 @@ var db = (function () {
     sendResetLink: sendResetLink,
     checkMailCode: checkMailCode,
     getUploadSlots: getUploadSlots,
-    publishImage: publishImage
+    publishImage: publishImage,
+    cleanup: cleanup
   };
 })();
 

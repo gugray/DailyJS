@@ -37,6 +37,17 @@ var sessions = (function () {
     return s;
   }
 
+  function cleanup() {
+    var tokens = [];
+    for (k in sessions) {
+      tokens.push(k);
+    }
+    for (var i = 0; i != tokens.length; ++i) {
+      // getSessions removes expired sessions.
+      getSession(tokens[i]);
+    }
+  }
+
   // Verifies authenticated session before serving requests
   // Updates session status; infuses info for later handlers
   function sessionWare(req, res, next) {
@@ -113,7 +124,8 @@ var sessions = (function () {
     sessionWare: sessionWare,
     login: login,
     logout: logout,
-    isLoggedIn: isLoggedIn
+    isLoggedIn: isLoggedIn,
+    cleanup: cleanup
   };
 
 })();
