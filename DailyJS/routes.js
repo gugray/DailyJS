@@ -27,9 +27,13 @@ var routes = function (app) {
     }
     ps.then(
       (result) => {
+        var pageTitle = "daily : sojourn";
+        pageTitle += " • " + result.dateStr + " / " + result.city + " / " + result.user;
+        pageTitle += " • " + result.title;
         var model = {
           prod: process.env.NODE_ENV == "production",
           ver: pjson.version,
+          title: pageTitle,
           pageNotFound: false,
           img: {
             prev_url: result.prev_dateint ? "/past/" + result.prev_dateint + "/" + encodeURIComponent(result.prev_city) : "#",
@@ -54,6 +58,7 @@ var routes = function (app) {
         res.render(__dirname + "/index.ejs", {
           prod: process.env.NODE_ENV == "production",
           ver: pjson.version,
+          title: "daily : sojourn • page not found",
           img: null,
           pageNotFound: true
         });
@@ -66,6 +71,7 @@ var routes = function (app) {
     res.render(__dirname + "/index.ejs", {
       prod: process.env.NODE_ENV == "production",
       ver: pjson.version,
+      title: "daily : sojourn",
       img: null,
       pageNotFound: false
     });
@@ -426,6 +432,7 @@ var routes = function (app) {
     res.render(__dirname + "/index.ejs", {
       prod: process.env.NODE_ENV == "production",
       ver: pjson.version,
+      title: "daily : sojourn • page not found",
       img: null,
       pageNotFound: true
     });

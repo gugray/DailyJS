@@ -4,7 +4,7 @@ var config = require("./config.js");
 var mailer = (function () {
   "use strict";
 
-  var fromFriendly = "daily sojourn";
+  var fromFriendly = "daily : sojourn";
   var subjBumped = "you need to choose a new secret";
   var textBumped = "hello {{usrname}},\n\nsomeone else just tried to set your secret as their own. no worries, your account is safe.\nyour old secret will no longer work. to log in again, click \"forgot\" to receive an email with a reset link.\n\n--daily";
   var subjReset = "reset your secret";

@@ -99,14 +99,14 @@ App.history = (function (path) {
     for (var i = 0; i != data.images.length; ++i) {
       var img = data.images[i];
       var dataNav = "/past/" + img.dateint + "/" + encodeURIComponent(img.city);
-      html += "<div class='thumb' data-nav='" + dataNav + "'>";
+      html += "<a class='thumb ajax' href='" + dataNav + "'>";
       html += "<div class='meta'>";
       html += img.dateStrShort + "<br/>" + App.page.esc(img.city) + " &bull; " + App.page.esc(img.user);
+      html += "</div>"; // <div class='meta'>
       html += "<div class='image'><img src='";
       html += img.img_url + "' /></div>";
       html += "<div class='title'>" + App.page.esc(img.title) + "</div>";
-      html += "</div>"; // <div class='meta'>
-      html += "</div>"; // <div class='thumb'>
+      html += "</a>"; // <a class='thumb'>
     }
     html += "</div>"; // <div class='thumbs'>
     // Calendar
@@ -171,9 +171,10 @@ App.history = (function (path) {
       if ($(this).hasClass("empty")) return;
       App.page.inPageNavigate($(this).data("nav"));
     });
-    $(".thumb").click(function () {
-      App.page.inPageNavigate($(this).data("nav"));
-    });
+    // Was needed while .thumb was a div, not and a
+    //$(".thumb").click(function () {
+    //  App.page.inPageNavigate($(this).data("nav"));
+    //});
     $(".navUser").click(function () {
       if ($(".filter.users").hasClass("visible")) {
         $(".filter.users").removeClass("visible");

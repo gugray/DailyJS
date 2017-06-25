@@ -28,12 +28,18 @@ App.inside = (function () {
         App.page.inPageNavigate("/");
       });
       // Where am I?
-      if (App.page.path().indexOf("/inside/upload") == 0)
+      if (App.page.path().indexOf("/inside/upload") == 0) {
+        $(document).attr("title", "daily : sojourn • upload");
         $(".menu-item.menuUpload").addClass("selected");
-      else if (App.page.path().indexOf("/inside/history") == 0)
+      }
+      else if (App.page.path().indexOf("/inside/history") == 0) {
+        $(document).attr("title", "daily : sojourn • history");
         $(".menu-item.menuHistory").addClass("selected");
-      else if (App.page.path().indexOf("/inside/profile") == 0)
+      }
+      else if (App.page.path().indexOf("/inside/profile") == 0) {
+        $(document).attr("title", "daily : sojourn • profile");
         $(".menu-item.menuProfile").addClass("selected");
+      }
     }
   };
 
