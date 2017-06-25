@@ -254,7 +254,7 @@ var routes = function (app) {
       }
       ctxt.secret = q.secret;
       ctxt.newEmail = q.newEmail.trim().toLowerCase();
-      verifyFun = sessions.verifyUserSecret;
+      verifyFun = db.verifyUserSecret;
     }
     else {
       logger.evtReqInfo(req, 400);
