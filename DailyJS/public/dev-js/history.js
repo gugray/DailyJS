@@ -99,6 +99,7 @@ App.history = (function (path) {
     for (var i = 0; i != data.images.length; ++i) {
       var img = data.images[i];
       var dataNav = "/past/" + img.dateint + "/" + encodeURIComponent(img.city);
+      dataNav = dataNav.replace("'", "&apos;");
       html += "<a class='thumb ajax' href='" + dataNav + "'>";
       html += "<div class='meta'>";
       html += img.dateStrShort + "<br/>" + App.page.esc(img.city) + " &bull; " + App.page.esc(img.user);
