@@ -136,6 +136,24 @@ App.profile = (function () {
       if (ok) $(".formRow.secret .save").removeClass("disabled");
       else $(".formRow.secret .save").addClass("disabled");
     });
+    $(".showSecret").mousedown(function (evt) {
+      evt.stopPropagation();
+      evt.preventDefault();
+      if ($(this).hasClass("active")) {
+        $(this).removeClass("active");
+        $("#txtNewSecret1").attr("type", "password");
+      }
+      else {
+        $(this).addClass("active");
+        $("#txtNewSecret1").attr("type", "text");
+        var elm = $(this);
+        setTimeout(function () {
+          elm.removeClass("active");
+          $("#txtNewSecret1").attr("type", "password");
+          $("#txtNewSecret1").focus();
+        }, 2000);
+      }
+    });
   }
 
   function onEditSecret() {
