@@ -56,6 +56,7 @@ USE_DEV_SETTINGS=false</Environment>
     <Compile Include="sessions.js" />
     <Compile Include="snippets\_snippets.js" />
     <Content Include="create-script.txt" />
+    <Content Include="login.ejs" />
     <Content Include="public\dev-style\style.less" />
     <Content Include="package.json" />
     <Content Include="public\robots.txt" />

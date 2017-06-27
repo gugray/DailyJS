@@ -107,6 +107,16 @@ var routes = function (app) {
     );
   });
 
+  app.post("/framelogin", function (req, res) {
+    res.setHeader("Cache-Control", "max-age=31536000, public");
+    res.render(__dirname + "/login.ejs", { ver: pjson.version });
+  });
+
+  app.get("/framelogin", function (req, res) {
+    res.setHeader("Cache-Control", "max-age=31536000, public");
+    res.render(__dirname + "/login.ejs", { ver: pjson.version });
+  });
+
   app.post("/api/login", function (req, res) {
     if (!req.body.secret) {
       logger.evtReqInfo(req, 400);

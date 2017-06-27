@@ -5,6 +5,16 @@ var App = App || {};
 App.auth = (function (path) {
   "use strict";
 
+  $(document).ready(function () {
+    setInterval(function () {
+      var iframe = $("iframe#loginFrame").contents();
+      var pwd = iframe.find("#password").val();
+      if (pwd != "" && pwd != $(".loginPanel #txtSecret").val()) {
+        $(".loginPanel #txtSecret").val(pwd);
+      }
+    }, 100);
+  });
+
   function isLoggedIn() {
     var token = localStorage.getItem("token");
     if (!token || token == "") return false;
@@ -159,6 +169,11 @@ App.auth = (function (path) {
     // We're in "enter secret" mode
     if (!$("#txtSecret").hasClass("hidden")) {
       $(".btnLoginGo").addClass("disabled");
+
+      var iframe = $("#loginFrame").contents();
+      iframe.find("#password").val($("#txtSecret").val());
+      iframe.find("form").trigger("submit");
+
       App.auth.login($("#txtSecret").val(), function (res) {
         $(".btnLoginGo").removeClass("disabled");
         if (!res) {
