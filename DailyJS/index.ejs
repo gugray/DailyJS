@@ -69,6 +69,10 @@
   </div>
 
   <iframe id="loginFrame" name="loginFrame" src="/framelogin" style="display: none;"></iframe>
+  <form method="post" action="/" id="hiddenLoginForm" autocomplete="on" target="loginFrame" style="display: none;">
+    <input type="text" id="hiddenUsername" name="username" value="(me)" style="display: none;" />
+    <input type="password" id="hiddenPassword" name="password" placeholder="tell me a secret" maxlength="32" />
+  </form>
 
   <% if (prod) { %>
   <script src="/app.min.js?v=<%= ver %>"></script>

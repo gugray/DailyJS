@@ -5,6 +5,17 @@ var App = App || {};
 App.auth = (function (path) {
   "use strict";
 
+  var lastSeenHiddenSecret = null;
+  $(document).ready(function () {
+    setInterval(function () {
+      var pwd = $("#hiddenLoginForm #hiddenPassword").val();
+      if (pwd && pwd != lastSeenHiddenSecret) {
+        $("#password").val(pwd);
+        lastSeenHiddenSecret = pwd;
+      }
+    }, 100);
+  });
+
   function isLoggedIn() {
     var token = localStorage.getItem("token");
     if (!token || token == "") return false;
