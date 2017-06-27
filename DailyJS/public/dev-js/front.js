@@ -64,8 +64,8 @@ App.front = (function (path) {
     if (!App.auth.isLoggedIn()) {
       $(".photoMeta").addClass("hidden");
       $(".loginPanel").addClass("visible");
-      $("#txtSecret").val("");
-      $("#txtSecret").focus();
+      //$("#password").val("");
+      $("#password").focus();
     }
     // Currently logged in: go inside
     else App.page.inPageNavigate(pathOnLogin);

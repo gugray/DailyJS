@@ -1,5 +1,8 @@
 ﻿<div class="loginPanel">
-  <input type="password" id="txtSecret" placeholder="tell me a secret" maxlength="32" />
+  <form method="post" action="/" id="loginForm" autocomplete="on" target="loginFrame">
+    <input type="text" id="username" name="username" value="(me)" style="display: none;" />
+    <input type="password" id="password" name="password" placeholder="tell me a secret" maxlength="32" />
+  </form>
   <input type="text" id="txtResetEmail" class="hidden" placeholder="enter your email" maxlength="64" />
   <i class="fa fa-arrow-right btnLoginGo disabled"></i>
   <i class="fa fa-spinner fa-pulse fa-3x fa-fw icoEmailSending hidden"></i>

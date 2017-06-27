@@ -5,22 +5,6 @@ var App = App || {};
 App.auth = (function (path) {
   "use strict";
 
-  $(document).ready(function () {
-    setInterval(function () {
-      var pwd = $("#hiddenForm #password").val();
-      if (pwd && pwd != "" && pwd != $(".loginPanel #txtSecret").val()) {
-        $(".loginPanel #txtSecret").val(pwd);
-      }
-    }, 100);
-    //setInterval(function () {
-    //  var iframe = $("iframe#loginFrame").contents();
-    //  var pwd = iframe.find("#password").val();
-    //  if (pwd != "" && pwd != $(".loginPanel #txtSecret").val()) {
-    //    $(".loginPanel #txtSecret").val(pwd);
-    //  }
-    //}, 100);
-  });
-
   function isLoggedIn() {
     var token = localStorage.getItem("token");
     if (!token || token == "") return false;
@@ -100,8 +84,8 @@ App.auth = (function (path) {
     var html = zsnippets["in-login"];
     html = html.replace("{{loginpanel-inner}}", zsnippets["chunk-loginpanel"]);
     $(".content-inner").html(html);
-    $("#txtSecret").val("");
-    $("#txtSecret").focus();
+    $("#password").val("");
+    $("#password").focus();
     controlLogin();
   }
 
@@ -112,16 +96,23 @@ App.auth = (function (path) {
     return reMail.test(str);
   }
 
+  function loginSubmitTimerCheck() {
+    if ($("#password").length != 0) setTimeout(loginSubmitTimerCheck, 100);
+    if ($("#password").val() != "") $(".btnLoginGo").removeClass("disabled");
+    else $(".btnLoginGo").addClass("disabled");
+  }
+
   function controlLogin(pathOnSuccess) {
-    $("#txtSecret").on("input", function () {
-      if ($("#txtSecret").val() != "") $(".btnLoginGo").removeClass("disabled");
-      else $(".btnLoginGo").addClass("disabled");
-    });
+    setTimeout(loginSubmitTimerCheck, 100);
+    //$("#password").on("input", function () {
+    //  if ($("#password").val() != "") $(".btnLoginGo").removeClass("disabled");
+    //  else $(".btnLoginGo").addClass("disabled");
+    //});
     $("#txtResetEmail").on("input", function () {
       if (isValidEmail($("#txtResetEmail").val())) $(".btnLoginGo").removeClass("disabled");
       else $(".btnLoginGo").addClass("disabled");
     });
-    $("#txtSecret").keyup(function (event) {
+    $("#password").keyup(function (event) {
       if (event.keyCode == 13) {
         onLoginGo(pathOnSuccess);
         return false;
@@ -146,14 +137,14 @@ App.auth = (function (path) {
     if (forgot) {
       $(".forgotSecret").text("forgot?");
       $("#txtResetEmail").addClass("hidden");
-      $("#txtSecret").removeClass("hidden");
-      $("#txtSecret").val("");
-      $("#txtSecret").focus();
+      $("#password").removeClass("hidden");
+      $("#password").val("");
+      $("#password").focus();
     }
     else {
       $(".forgotSecret").text("cancel");
       $("#txtResetEmail").removeClass("hidden");
-      $("#txtSecret").addClass("hidden");
+      $("#password").addClass("hidden");
       $("#txtResetEmail").val("");
       $("#txtResetEmail").focus();
     }
@@ -173,17 +164,11 @@ App.auth = (function (path) {
     // Hide previous popup if we still have it
     $(".popup").removeClass("visible");
     // We're in "enter secret" mode
-    if (!$("#txtSecret").hasClass("hidden")) {
+    if (!$("#password").hasClass("hidden")) {
       $(".btnLoginGo").addClass("disabled");
-
-      $("#hiddenForm #password").val($("#txtSecret").val());
-      $("#hiddenForm").trigger("submit");
-      //var iframe = $("#loginFrame").contents();
-      //iframe.find("#password").val($("#txtSecret").val());
-      //iframe.find("form").trigger("submit");
-
-      App.auth.login($("#txtSecret").val(), function (res) {
+      App.auth.login($("#password").val(), function (res) {
         $(".btnLoginGo").removeClass("disabled");
+        $("#loginForm").submit();
         if (!res) {
           // Failed login feedback
           $(".loginPanel").addClass("failed");
