@@ -74,9 +74,12 @@ App.mailcode = (function () {
 
   function submit() {
     $(".error").removeClass("visible");
+    if ($(".icoResetProgress").hasClass("visible")) return;
     if (!validateSecretPreSubmit()) return;
+    $(".icoResetProgress").addClass("visible");
     var req = App.auth.ajax("/api/changesecret", "POST", { mailCode: code, newSecret: $("#txtSecret").val() });
     req.done(function (data) {
+      $(".icoResetProgress").removeClass("visible");
       if (data.error) {
         if (data.error == "knownsecret") {
           $(".errKnownSecret").addClass("visible");

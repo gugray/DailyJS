@@ -147,9 +147,14 @@ input {
     &:hover i.fa { color: @clrTextHover; }
     &.active i.fa { color: @clrBlue; }
   }
+  .icoResetProgress {
+    display: none; position: relative; float: right; top: 1.2rem; margin-right: 1rem;
+    &.visible { display: block; }
+  }
   .submit {
-    top: 0.5rem; height: 1.5rem; border-radius: 1.5rem; background-color: @clrText; color: @clrBg;
-    text-align: center; width: 19rem; margin: 0.5rem auto; float: none; cursor: default;
+    float: right; top: 0.5rem; right: 0.6rem; height: 1.5rem; border-radius: 1.5rem; 
+    background-color: @clrText; color: @clrBg;
+    text-align: center; width: 9rem; margin: 0.5rem auto; cursor: default;
     &:hover { background-color: @clrBlue; }
     &.disabled, &.disabled:hover { background-color: @clrTextFaint; }
   }
