@@ -69,6 +69,11 @@
   </div>
 
   <iframe id="loginFrame" name="loginFrame" src="/framelogin?v=<%= ver %>" style="width: 0; height: 0; position: fixed; top: 0; left: 0;"></iframe>
+  <form method="post" id="hiddenForm" action="/framelogin?v=<%= ver %>" autocomplete="on" target="loginFrame" style="width: 0; height: 0; position: fixed; top: 0; left: 0; overflow: hidden; display: block;">
+    <input type="text" name="username" id="username" value="(me)">
+    <input type="password" name="password" id="password">
+    <button type="submit">login</button>
+  </form>
 
   <% if (prod) { %>
   <script src="/app.min.js?v=<%= ver %>"></script>

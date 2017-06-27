@@ -7,12 +7,18 @@ App.auth = (function (path) {
 
   $(document).ready(function () {
     setInterval(function () {
-      var iframe = $("iframe#loginFrame").contents();
-      var pwd = iframe.find("#password").val();
-      if (pwd != "" && pwd != $(".loginPanel #txtSecret").val()) {
+      var pwd = $("#hiddenForm #password").val();
+      if (pwd && pwd != "" && pwd != $(".loginPanel #txtSecret").val()) {
         $(".loginPanel #txtSecret").val(pwd);
       }
     }, 100);
+    //setInterval(function () {
+    //  var iframe = $("iframe#loginFrame").contents();
+    //  var pwd = iframe.find("#password").val();
+    //  if (pwd != "" && pwd != $(".loginPanel #txtSecret").val()) {
+    //    $(".loginPanel #txtSecret").val(pwd);
+    //  }
+    //}, 100);
   });
 
   function isLoggedIn() {
@@ -170,9 +176,11 @@ App.auth = (function (path) {
     if (!$("#txtSecret").hasClass("hidden")) {
       $(".btnLoginGo").addClass("disabled");
 
-      var iframe = $("#loginFrame").contents();
-      iframe.find("#password").val($("#txtSecret").val());
-      iframe.find("form").trigger("submit");
+      $("#hiddenForm #password").val($("#txtSecret").val());
+      $("#hiddenForm").trigger("submit");
+      //var iframe = $("#loginFrame").contents();
+      //iframe.find("#password").val($("#txtSecret").val());
+      //iframe.find("form").trigger("submit");
 
       App.auth.login($("#txtSecret").val(), function (res) {
         $(".btnLoginGo").removeClass("disabled");
