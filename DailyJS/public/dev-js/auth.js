@@ -109,6 +109,8 @@ App.auth = (function (path) {
 
   function loginSubmitTimerCheck() {
     if ($("#password").length != 0) setTimeout(loginSubmitTimerCheck, 100);
+    // If we're in enter email mode, don't mess around
+    if ($("#password").hasClass("hidden")) return;
     if ($("#password").val() != "") $(".btnLoginGo").removeClass("disabled");
     else $(".btnLoginGo").addClass("disabled");
   }
