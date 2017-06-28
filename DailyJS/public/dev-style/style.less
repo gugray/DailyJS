@@ -1,5 +1,6 @@
 ﻿@fntBaseFamily: "Open Sans", sans-serif;
 @fntBaseSize: 12pt;
+@fntMobileSize: 12pt;
 @clrText: #d0d0d0;
 @clrTextFaint: #808080;
 @clrTextFainter: #505050;
@@ -396,3 +397,43 @@ input {
     i { font-size: 1rem; }
   }
 }
+
+@media screen and (max-width: 670px) {
+  html { font-size: @fntMobileSize; }
+  body { padding: 0; }
+  .plank { height: auto; min-height: 100%; overflow-y: auto; }
+  .stickerTop {
+    .stickerFront { margin: 0; height: 100%; overflow: visible; }
+    border-radius: 0; height: 5rem; position: absolute; margin: 0;
+    padding: 0.5rem 0.8rem; font-size: 11pt; overflow: visible;
+    .menu {
+      width: auto; position: absolute; right: 0; padding: 0; font-size: 1.7rem; height: auto;
+      a, span { width: 1.7rem; }
+    }
+    .photoMeta {
+      position: absolute; width: 100%; top: 0; left: 0; margin: 0; padding: 0;
+      text-align: left; color: @clrTextHover;
+      z-index: 0;
+    }
+    .photoTitle {
+      position: absolute; width: 100%; bottom: 0; left: 0; margin: 0 0 -0.2rem 0; padding: 0.2rem 0 0 0;
+      text-align: left; font-size: @fntMobileSize; height: auto; color: @clrText; border-top: 1pt solid @clrTextFainter;
+      z-index: 0;
+    }
+  }
+  .content {
+    position: relative; height: auto; overflow: auto; padding: 4rem 0 2rem 0;
+    .content-inner {
+      height: auto; overflow: auto; top: auto; transform: none;
+    }
+    .image-holder {
+      position: fixed; top: 5.5rem; bottom: 2rem; height: auto; left: 0; width: 100%;
+      &.swipe-left { transition: margin 0.3s ease-in; margin-left: -100%; }
+      &.swipe-right { transition: margin 0.3s ease-in; margin-left: 100%; }
+    }
+  }
+  .centrerBottom {
+    position: absolute; bottom: 0;
+  }
+}
+

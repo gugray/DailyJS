@@ -10,6 +10,7 @@ App.front = (function (path) {
 
   var path = path;
   var pathOnLogin = "/inside/upload";
+  var nextImageUrl = null;
   enter();
 
   // Called when front first shown, or navigated to from back
@@ -49,11 +50,50 @@ App.front = (function (path) {
     var elmLoginPanel = $(zsnippets["chunk-loginpanel"]);
     elmLoginPanel.insertBefore(".photoMeta");
     App.auth.controlLogin(pathOnLogin);
+    // In mobile view, swipe events
+    if ($(".image-holder").css("position") == "fixed") {
+      var hamm = new Hammer($(".image-holder")[0], { touchAction: 'auto' });
+      hamm.on("swipeleft", onSwipe);
+      hamm.on("swiperight", onSwipe);
+    }
     // Let caller now if we still need to fetch data
     return !contentAlreadyThere;
   }
 
+  function onSwipe(e) {
+    var elmLink;
+    var cls;
+    if ($(".image-holder").hasClass("swiping")) return;
+    if (e.type == "swipeleft") {
+      elmLink = $(".stickerFront .back");
+      cls = "swipe-left";
+    }
+    else if (e.type == "swiperight") {
+      elmLink = $(".stickerFront .forward");
+      cls = "swipe-right";
+    }
+    if (elmLink.hasClass("disabled")) return;
+    e.preventDefault();
+    nextImageUrl = null;
+    $(".image-holder").addClass("swiping");
+    $(".image-holder").addClass(cls);
+    setTimeout(function () {
+      $(".image-holder").removeClass("swiping");
+      $(".image-holder").removeClass(cls);
+      if (nextImageUrl) {
+        $(".image-holder").css("background-image", "url('" + nextImageUrl + "')");
+      }
+    }, 700);
+    elmLink.click();
+  }
+
   function onEnterClicked() {
+    // In mobile view: go straight inside. We'll get login screen.
+    if ($(".image-holder").css("position") == "fixed") {
+      // No entry, for now
+      //App.page.inPageNavigate(pathOnLogin);
+      return;
+    }
     // Login panel currently shown: hide it
     if ($(".loginPanel").hasClass("visible")) {
       $(".photoMeta").removeClass("hidden");
@@ -118,8 +158,15 @@ App.front = (function (path) {
     var pageTitle = "daily : sojourn • " + data.dateStr + " / " + data.city + " / " + data.user + " • " + data.title;
     $(document).attr("title", pageTitle);
     var tmpImg = new Image();
-    tmpImg.onload = function () { $(".image-holder").css("background-image", "url('" + data.img_url + "')"); };
-    tmpImg.onerror = function () { $(".image-holder").css("background-image", ""); };
+    tmpImg.onload = function () {
+      nextImageUrl = data.img_url;
+      if (!$(".image-holder").hasClass("swiping"))
+        $(".image-holder").css("background-image", "url('" + data.img_url + "')");
+    };
+    tmpImg.onerror = function () {
+      nextImageUrl = "";
+      $(".image-holder").css("background-image", "");
+    };
     tmpImg.src = data.img_url;
   }
 
