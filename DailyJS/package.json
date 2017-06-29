@@ -1,6 +1,6 @@
 {
   "name": "daily-js",
-  "version": "2.0.13",
+  "version": "2.0.14",
   "description": "Daily Sojourn, Node.js incarnation",
   "main": "server.js",
   "author": {

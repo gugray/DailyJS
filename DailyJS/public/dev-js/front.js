@@ -95,6 +95,7 @@ App.front = (function (path) {
       if (nextImageUrl) {
         $(".image-holder").css("background-image", "url('" + nextImageUrl + "')");
       }
+      else $(".image-holder").css("background-image", "none");
     }, 700);
     App.page.inPageNavigate(elmLink.attr("href"));
   }
