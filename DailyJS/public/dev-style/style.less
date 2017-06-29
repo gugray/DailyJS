@@ -17,7 +17,7 @@ div, p, h1, h2, h3, ul, ol, blockquote {
   position: relative; float: left; box-sizing: border-box; width: 100%;
   height: auto; overflow-y: auto;
 }
-html { height: 100%; background-color: @clrBg; font-size: @fntBaseSize; font-family: @fntBaseFamily; }
+html { height: 100%; background-color: @clrBg; font-size: @fntBaseSize; font-family: @fntBaseFamily; border: 0; margin: 0; }
 body { 
   position: relative; width: 100%; height: 100%; overflow: hidden;
   box-sizing: border-box; padding: 1rem 1.5rem 0.5rem 1.5rem;
@@ -404,14 +404,17 @@ input {
   .plank { height: auto; min-height: 100%; overflow-y: auto; }
   .stickerTop {
     .stickerFront { margin: 0; height: 100%; overflow: visible; }
-    border-radius: 0; height: 5rem; position: absolute; margin: 0;
+    position: fixed; z-index: 2;
+    border-radius: 0; height: 5rem; margin: 0;
     padding: 0.5rem 0.8rem; font-size: 11pt; overflow: visible;
     .menu {
       width: auto; position: absolute; right: 0; padding: 0; font-size: 1.7rem; height: auto;
+      z-index: 1;
       a, span { width: 1.7rem; }
+      .enter { display: none; }
     }
     .photoMeta {
-      position: absolute; width: 100%; top: 0; left: 0; margin: 0; padding: 0;
+      position: absolute; width: auto; top: 0; left: 0; right: 6rem; margin: 0; padding: 0;
       text-align: left; color: @clrTextHover;
       z-index: 0;
     }
@@ -433,7 +436,7 @@ input {
     }
   }
   .centrerBottom {
-    position: absolute; bottom: 0;
+    position: fixed; bottom: 0;
   }
 }
 

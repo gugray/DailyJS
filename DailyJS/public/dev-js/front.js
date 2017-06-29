@@ -56,8 +56,20 @@ App.front = (function (path) {
       hamm.on("swipeleft", onSwipe);
       hamm.on("swiperight", onSwipe);
     }
+    // Handle back/forward link clicks explicitly; navigation by swipe on mobile
+    $(".menu a").click(onNavLinkClick);
     // Let caller now if we still need to fetch data
     return !contentAlreadyThere;
+  }
+
+  function onNavLinkClick(e) {
+    // Not mobile view? Nothing to do.
+    if ($(".image-holder").css("position") != "fixed") return;
+    // Otherwise, prevent default behavior, and swipe
+    e.preventDefault();
+    e.stopPropagation();
+    if ($(this).hasClass("back")) onSwipe({ type: "swipeleft" });
+    else if ($(this).hasClass("forward")) onSwipe({ type: "swiperight" });
   }
 
   function onSwipe(e) {
@@ -73,7 +85,7 @@ App.front = (function (path) {
       cls = "swipe-right";
     }
     if (elmLink.hasClass("disabled")) return;
-    e.preventDefault();
+    if (e.preventDefault) e.preventDefault();
     nextImageUrl = null;
     $(".image-holder").addClass("swiping");
     $(".image-holder").addClass(cls);
@@ -84,7 +96,7 @@ App.front = (function (path) {
         $(".image-holder").css("background-image", "url('" + nextImageUrl + "')");
       }
     }, 700);
-    elmLink.click();
+    App.page.inPageNavigate(elmLink.attr("href"));
   }
 
   function onEnterClicked() {
