@@ -24,7 +24,7 @@ var logger = (function () {
   function appReqError(req, err) {
     var txt = "Failed to serve request: " + req.url + "\n";
     if (req.dailyUserName) txt += " > DailyUser: " + req.dailyUserName + "\n";
-    else txt += " > DailyUser: n/a\n";
+    //else txt += " > DailyUser: n/a\n";
     txt += " > Body: " + JSON.stringify(req.body) + "\n";
     txt += (err.stack || err);
     applog.error(txt);
@@ -41,7 +41,7 @@ var logger = (function () {
   function evtReqInfo(req, status) {
     var txt = status + " " + req.url + "\n";
     if (req.dailyUserName) txt += " > DailyUser: " + req.dailyUserName + "\n";
-    else txt += " > DailyUser: n/a\n";
+    //else txt += " > DailyUser: n/a\n";
     txt += " > Body: " + JSON.stringify(req.body) + "\n";
     txt += " > IP: " + getIP(req) + "\n";
     txt += " > UserAgent: " + req.headers['user-agent'];
@@ -52,7 +52,7 @@ var logger = (function () {
     var txt = req.url + "\n";
     txt += " > Details: " + msg + "\n";
     if (req.dailyUserName) txt += " > DailyUser: " + req.dailyUserName + "\n";
-    else txt += " > DailyUser: n/a\n";
+    //else txt += " > DailyUser: n/a\n";
     txt += " > IP: " + getIP(req) + "\n";
     txt += " > UserAgent: " + req.headers['user-agent'];
     // Not logging body. With warnings, it is likely to contain user credentials.
