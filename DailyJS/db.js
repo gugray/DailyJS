@@ -15,6 +15,7 @@ var db = (function () {
     password: config.dbpass,
     database: config.dbname,
     connectionLimit: config.dbconnlimit,
+    insecureAuth: true,
     debug: false
   });
 
