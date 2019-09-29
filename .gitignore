@@ -2,6 +2,7 @@
 _images/
 _uploads/
 _logs/
+DailyJS/pid/DailyJS/log/
 DailyJS/package-lock.json
 DailyJS/node_modules/
 DailyJS/bin/
