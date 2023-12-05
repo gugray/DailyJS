@@ -1,7 +1,7 @@
 ﻿var config = require("./config.js");
 var filehelper = require("./filehelper.js");
 var crypt = require("./crypt.js");
-var mysql = require('mysql');
+var mysql = require('mysql2');
 var dateformat = require("./dateformat.js");
 var mailer = require("./mailer.js");
 

@@ -352,7 +352,7 @@ var routes = function (app) {
     form.maxFieldSize = 4 * 1024 * 1024;
     form.maxFields = 4 * 1024 * 1024;
     form.parse(req, function (err, fields, files) {
-      if (files.file.type != "image/jpeg") {
+      if (files.file[0].mimetype != "image/jpeg") {
         logger.evtReqInfo(req, 400);
         return res.status(400).send("invalid request; only jpeg images accepted");
       }
@@ -360,12 +360,8 @@ var routes = function (app) {
         logger.evtReqInfo(req, 401);
         return res.status(401).send("authentication needed");
       }
-      var orig_name = files.file.name;
-      var old_path = files.file.path;
-      var file_size = files.file.size;
-      var file_ext = files.file.name.split('.').pop();
-      var index = old_path.lastIndexOf('/') + 1;
-      var file_name = old_path.substr(index);
+      var old_path = files.file[0].filepath;
+      var file_size = files.file[0].size;
       var upload_name = myUuid + ".jpg";
       var new_path = config.uploadDir + "/" + upload_name;
 

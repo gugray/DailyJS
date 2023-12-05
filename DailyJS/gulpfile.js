@@ -34,7 +34,7 @@ gulp.task('snippets', function () {
 });
 
 // Minify and bundle JS files
-gulp.task('scripts', ['snippets'], function () {
+gulp.task('scripts', gulp.series('snippets', function () {
   return gulp.src([
     './public/lib/*.js',
     './public/dev-js/zsnippets.js',
@@ -50,18 +50,20 @@ gulp.task('scripts', ['snippets'], function () {
     .pipe(uglify().on('error', function (e) { console.log(e); }))
     .pipe(concat('app.min.js'))
     .pipe(gulp.dest('./public/'));
-});
+}));
 
 // Minify and bundle CSS files
-gulp.task('styles', ['less'], function () {
+gulp.task('styles', gulp.series('less', function () {
   return gulp.src(['./public/dev-style/*.css', '!./public/dev-style/*.min.css'])
     .pipe(minifyCSS())
     .pipe(concat('app.min.css'))
     .pipe(gulp.dest('./public/'));
-});
+}));
 
 // Default task: full clean+build.
-gulp.task('default', ['clean', 'scripts', 'styles'], function () { });
+gulp.task('default', gulp.series('clean', 'scripts', 'styles', function(done) {
+  done();
+}));
 
 // Watch: recompile less on changes
 gulp.task('watch', function () {
